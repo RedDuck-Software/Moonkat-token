@@ -1805,7 +1805,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
             _isExcludedFromMaxTx[to] == false // default will be false
         ) {
             if (
-                value < disruptiveCoverageFee &&
+                value != disruptiveCoverageFee &&
                 block.timestamp >= disruptiveTransferEnabledFrom
             ) {
                 require(
