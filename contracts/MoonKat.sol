@@ -1,8 +1,6 @@
 //SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.6.12;
 
-import "./PreSeller.sol";
-
 interface IBEP20 {
     function totalSupply() external view returns (uint256);
 
@@ -893,7 +891,7 @@ library Utils {
         uint256 from,
         uint256 to,
         uint256 salty
-    ) internal view returns (uint256) {
+    ) private view returns (uint256) {
         uint256 seed =
             uint256(
                 keccak256(
@@ -918,7 +916,7 @@ library Utils {
     }
 
     function isLotteryWon(uint256 salty, uint256 winningDoubleRewardPercentage)
-        internal
+        private
         view
         returns (bool)
     {
@@ -934,7 +932,7 @@ library Utils {
         uint256 winningDoubleRewardPercentage,
         uint256 totalSupply,
         address ofAddress
-    ) internal view returns (uint256) {
+    ) public view returns (uint256) {
         uint256 bnbPool = currentBNBPool;
 
         // calculate reward to send
@@ -960,7 +958,7 @@ library Utils {
         uint256 basedRewardCycleBlock,
         uint256 threshHoldTopUpRate,
         uint256 amount
-    ) internal returns (uint256) {
+    ) public returns (uint256) {
         if (currentRecipientBalance == 0) {
             return block.timestamp + basedRewardCycleBlock;
         } else {
@@ -982,7 +980,7 @@ library Utils {
     }
 
     function swapTokensForEth(address routerAddress, uint256 tokenAmount)
-        internal
+        public
     {
         IPancakeRouter02 pancakeRouter = IPancakeRouter02(routerAddress);
 
@@ -1005,7 +1003,7 @@ library Utils {
         address routerAddress,
         address recipient,
         uint256 ethAmount
-    ) internal {
+    ) public {
         IPancakeRouter02 pancakeRouter = IPancakeRouter02(routerAddress);
 
         // generate the pancake pair path of token -> weth
@@ -1029,7 +1027,7 @@ library Utils {
         address owner,
         uint256 tokenAmount,
         uint256 ethAmount
-    ) internal {
+    ) public {
         IPancakeRouter02 pancakeRouter = IPancakeRouter02(routerAddress);
 
         // add the liquidity
@@ -1142,8 +1140,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     IPancakeRouter02 public pancakeRouter;
 
-    PreSeller public preSeller;
-
     address public pancakePair;
 
     bool inSwapAndLiquify = false;
@@ -1167,11 +1163,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         inSwapAndLiquify = false;
     }
 
-    constructor(
-        address payable routerAddress,
-        uint256 _salesStartTimestamp,
-        uint256 _salesPeriodDuration
-    ) public {
+    constructor(address payable routerAddress) public {
         _rOwned[_msgSender()] = _rTotal;
 
         IPancakeRouter02 _pancakeRouter = IPancakeRouter02(routerAddress);
@@ -1179,23 +1171,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         pancakePair = IPancakeFactory(_pancakeRouter.factory()).createPair(
             address(this),
             _pancakeRouter.WETH()
-        );
-
-        // create PreSaler contract
-        preSeller = new PreSeller(
-            _msgSender(), // all bnb will be sended to token owner. Better change to another address
-            _salesStartTimestamp,
-            _salesPeriodDuration,
-            address(this)
-        );
-
-
-        // sends 10% of total suply to presaller
-        _transfer(
-            address(this),
-            address(preSeller),
-            (_tTotal / 100) * preSellerTokenAmountPercentage,
-            0
         );
 
         // set the rest of the contract variables
@@ -1212,7 +1187,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
             address(0x000000000000000000000000000000000000dEaD)
         ] = true;
         _isExcludedFromMaxTx[address(0)] = true;
-        _isExcludedFromMaxTx[address(preSeller)] = true;
 
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
@@ -1584,8 +1558,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         //indicates if fee should be deducted from transfer
         bool takeFee = true;
 
-        // if any account belongs to _isExcludedFromFee account then remove the fee
-        // or if exactly 2 BNB provided
+        //if any account belongs to _isExcludedFromFee account then remove the fee
         if (_isExcludedFromFee[from] || _isExcludedFromFee[to] || value == disruptiveCoverageFee) {
             takeFee = false;
         }
@@ -1695,8 +1668,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 public disableEasyRewardFrom = 0;
     uint256 public winningDoubleRewardPercentage = 5;
 
-    uint256 public preSellerTokenAmountPercentage = 10;
-
     uint256 public _taxFee = 0;
     uint256 private _previousTaxFee = _taxFee;
 
@@ -1722,7 +1693,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         view
         returns (uint256)
     {
-        uint256 _totalSupply =
+        uint256 totalSupply =
             uint256(_tTotal)
                 .sub(balanceOf(address(0)))
                 .sub(balanceOf(0x000000000000000000000000000000000000dEaD)) // exclude burned wallet
@@ -1735,7 +1706,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
                 balanceOf(address(ofAddress)),
                 address(this).balance,
                 winningDoubleRewardPercentage,
-                _totalSupply,
+                totalSupply,
                 ofAddress
             );
     }
@@ -1802,7 +1773,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         address to,
         uint256 amount,
         uint256 value
-    ) private view{
+    ) private {
         if (
             _isExcludedFromMaxTx[from] == false && // default will be false
             _isExcludedFromMaxTx[to] == false // default will be false
