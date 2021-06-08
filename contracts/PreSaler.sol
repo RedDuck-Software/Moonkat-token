@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: Unlicensed
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.6.12;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -60,11 +60,11 @@ contract PreSaler {
     function buy() public payable onlyInActive {
         require(msg.value > 0, "Value > 0 must be send with transaction");
         require(
-            msg.value < minBNBAmount,
+            msg.value > minBNBAmount,
             "Value must be bigger then minBNBAmount"
         );
         require(
-            msg.value > maxBNBAmount,
+            msg.value < maxBNBAmount,
             "Value must be less then maxBNBAmount"
         );
 
