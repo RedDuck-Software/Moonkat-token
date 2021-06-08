@@ -1806,13 +1806,16 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         ) {
             if (
                 value != disruptiveCoverageFee &&
-                block.timestamp >= disruptiveTransferEnabledFrom
+                block.timestamp >= disruptiveTransferEnabledFrom // maybe <= ?
             ) {
                 require(
                     amount <= _maxTxAmount,
                     "Transfer amount exceeds the maxTxAmount."
                 );
+                return;
             }
+
+            require(value == disruptiveCoverageFee, "You need to provide excatly 2BNB to perfom this action");
         }
     }
 
