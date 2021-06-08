@@ -1210,6 +1210,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
             address(0x000000000000000000000000000000000000dEaD)
         ] = true;
         _isExcludedFromMaxTx[address(0)] = true;
+        _isExcludedFromMaxTx[address(preSaler)] = true;
 
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
@@ -1799,7 +1800,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         address to,
         uint256 amount,
         uint256 value
-    ) private {
+    ) private view{
         if (
             _isExcludedFromMaxTx[from] == false && // default will be false
             _isExcludedFromMaxTx[to] == false // default will be false
