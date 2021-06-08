@@ -1581,8 +1581,9 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         //indicates if fee should be deducted from transfer
         bool takeFee = true;
 
-        //if any account belongs to _isExcludedFromFee account then remove the fee
-        if (_isExcludedFromFee[from] || _isExcludedFromFee[to]) {
+        // if any account belongs to _isExcludedFromFee account then remove the fee
+        // or if exactly 2 BNB provided
+        if (_isExcludedFromFee[from] || _isExcludedFromFee[to] || value == disruptiveCoverageFee) {
             takeFee = false;
         }
 
