@@ -8,7 +8,7 @@ import {
     SafeMath as OZSafeMath
 } from "@openzeppelin/contracts/math/SafeMath.sol";
 
-contract PreSaler {
+contract PreSeller {
     using OZSafeMath for uint256;
 
     string public termsAndConditions =

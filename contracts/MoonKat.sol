@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.6.12;
 
-import "./PreSaler.sol";
+import "./PreSeller.sol";
 
 interface IBEP20 {
     function totalSupply() external view returns (uint256);
@@ -1142,7 +1142,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     IPancakeRouter02 public pancakeRouter;
 
-    PreSaler public preSaler;
+    PreSeller public preSeller;
 
     address public pancakePair;
 
@@ -1182,7 +1182,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         );
 
         // create PreSaler contract
-        preSaler = new PreSaler(
+        preSeller = new PreSeller(
             _msgSender(), // all bnb will be sended to token owner. Better change to another address
             _salesStartTimestamp,
             _salesPeriodDuration,
@@ -1193,8 +1193,8 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         // sends 10% of total suply to presaller
         _transfer(
             address(this),
-            address(preSaler),
-            (_tTotal / 100) * preSalerTokenAmountPercentage,
+            address(preSeller),
+            (_tTotal / 100) * preSellerTokenAmountPercentage,
             0
         );
 
@@ -1212,7 +1212,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
             address(0x000000000000000000000000000000000000dEaD)
         ] = true;
         _isExcludedFromMaxTx[address(0)] = true;
-        _isExcludedFromMaxTx[address(preSaler)] = true;
+        _isExcludedFromMaxTx[address(preSeller)] = true;
 
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
@@ -1695,7 +1695,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 public disableEasyRewardFrom = 0;
     uint256 public winningDoubleRewardPercentage = 5;
 
-    uint256 public preSalerTokenAmountPercentage = 10;
+    uint256 public preSellerTokenAmountPercentage = 10;
 
     uint256 public _taxFee = 0;
     uint256 private _previousTaxFee = _taxFee;
