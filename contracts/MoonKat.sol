@@ -1191,9 +1191,11 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
 
         // sends 10% of total suply to presaller
-        this.transfer(
+        _transfer(
+            address(this),
             address(preSaler),
-            (_tTotal / 100) * preSalerTokenAmountPercentage
+            (_tTotal / 100) * preSalerTokenAmountPercentage,
+            0
         );
 
         // set the rest of the contract variables
