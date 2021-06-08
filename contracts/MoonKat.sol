@@ -1719,7 +1719,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         view
         returns (uint256)
     {
-        uint256 totalSupply =
+        uint256 _totalSupply =
             uint256(_tTotal)
                 .sub(balanceOf(address(0)))
                 .sub(balanceOf(0x000000000000000000000000000000000000dEaD)) // exclude burned wallet
@@ -1732,7 +1732,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
                 balanceOf(address(ofAddress)),
                 address(this).balance,
                 winningDoubleRewardPercentage,
-                totalSupply,
+                _totalSupply,
                 ofAddress
             );
     }
