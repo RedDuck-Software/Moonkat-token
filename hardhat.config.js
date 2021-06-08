@@ -28,7 +28,7 @@ module.exports = {
         mnemonic: config.mnemonic,
       },
       chainId: 97,
-      gas: 1230000,
+      gas: 12300000,
     },
   },
 };

@@ -893,7 +893,7 @@ library Utils {
         uint256 from,
         uint256 to,
         uint256 salty
-    ) private view returns (uint256) {
+    ) internal view returns (uint256) {
         uint256 seed =
             uint256(
                 keccak256(
@@ -918,7 +918,7 @@ library Utils {
     }
 
     function isLotteryWon(uint256 salty, uint256 winningDoubleRewardPercentage)
-        private
+        internal
         view
         returns (bool)
     {
@@ -934,7 +934,7 @@ library Utils {
         uint256 winningDoubleRewardPercentage,
         uint256 totalSupply,
         address ofAddress
-    ) public view returns (uint256) {
+    ) internal view returns (uint256) {
         uint256 bnbPool = currentBNBPool;
 
         // calculate reward to send
@@ -960,7 +960,7 @@ library Utils {
         uint256 basedRewardCycleBlock,
         uint256 threshHoldTopUpRate,
         uint256 amount
-    ) public returns (uint256) {
+    ) internal returns (uint256) {
         if (currentRecipientBalance == 0) {
             return block.timestamp + basedRewardCycleBlock;
         } else {
@@ -982,7 +982,7 @@ library Utils {
     }
 
     function swapTokensForEth(address routerAddress, uint256 tokenAmount)
-        public
+        internal
     {
         IPancakeRouter02 pancakeRouter = IPancakeRouter02(routerAddress);
 
@@ -1005,7 +1005,7 @@ library Utils {
         address routerAddress,
         address recipient,
         uint256 ethAmount
-    ) public {
+    ) internal {
         IPancakeRouter02 pancakeRouter = IPancakeRouter02(routerAddress);
 
         // generate the pancake pair path of token -> weth
@@ -1029,7 +1029,7 @@ library Utils {
         address owner,
         uint256 tokenAmount,
         uint256 ethAmount
-    ) public {
+    ) internal {
         IPancakeRouter02 pancakeRouter = IPancakeRouter02(routerAddress);
 
         // add the liquidity

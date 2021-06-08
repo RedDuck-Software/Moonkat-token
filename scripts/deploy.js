@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 
 async function deployMoonKat() {
-  const MoonKat = await ethers.getContractFactory("MoonKat");
+  const MoonKat = await ethers.getContractFactory("Test");
   return await MoonKat.deploy(
     "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3",
     (Date.now() / 1000) | 0,
