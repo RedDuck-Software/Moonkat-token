@@ -1142,7 +1142,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     IPancakeRouter02 public immutable pancakeRouter;
 
-    PreSaler public immutable preSaler;
+    PreSaler public preSaler;
 
     address public immutable pancakePair;
 

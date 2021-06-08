@@ -1,28 +1,19 @@
 const { ethers } = require("hardhat");
 
-async function deployPreSaler(tokenAddress) {
-  const PreSaler = await ethers.getContractFactory("PreSaler");
-  return await PreSaler.deploy(
-    "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
-    Date.now() / 1000 | 0,
-    10000,
-    tokenAddress
+async function deployMoonKat() {
+  const MoonKat = await ethers.getContractFactory("MoonKat");
+  return await MoonKat.deploy(
+    "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3",
+    (Date.now() / 1000) | 0,
+    10000
   );
 }
 
-async function deploySampeERC20() {
-  const erc20 = await ethers.getContractFactory("SampleERC20");
-  return await erc20.deploy();
-}
-
 async function main() {
-  var ercToken = await deploySampeERC20();
-  console.log("ERC20 token deployed to: '\x1b[36m%s\x1b[0m'", ercToken.address);
-
-  var saler = await deployPreSaler(ercToken.address);
+  var moonKat = await deployMoonKat();
   console.log(
-    "PreSaler contract deployed to: '\x1b[36m%s\x1b[0m'",
-    saler.address
+    "MoonKat contract deployed to: '\x1b[36m%s\x1b[0m'",
+    moonKat.address
   );
 }
 

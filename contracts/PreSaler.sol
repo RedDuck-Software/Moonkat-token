@@ -3,10 +3,13 @@
 pragma solidity ^0.6.12;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
+import {
+    SafeMath as OZSafeMath
+} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract PreSaler {
-    using SafeMath for uint256;
+    using OZSafeMath for uint256;
 
     string public termsAndConditions =
         "By interacting with this contract, I confirm I am not a US citizen. I agree to be bound by the terms found at [termsAndConditionUrl]";
@@ -39,7 +42,7 @@ contract PreSaler {
         uint256 _saleStart,
         uint256 _saleDuration,
         address _tokenOnSale
-    ) {
+    ) public {
         require(_saleStart != 0, "Sale start should be greater than 0");
         require(_saleDuration != 0, "Sale duration should be greater than 0");
         require(
