@@ -1140,11 +1140,11 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     string private _symbol = "TEST";
     uint8 private _decimals = 9;
 
-    IPancakeRouter02 public immutable pancakeRouter;
+    IPancakeRouter02 public pancakeRouter;
 
     PreSaler public preSaler;
 
-    address public immutable pancakePair;
+    address public pancakePair;
 
     bool inSwapAndLiquify = false;
 
