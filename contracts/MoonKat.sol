@@ -1,6 +1,8 @@
 //SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.6.12;
 
+import "./PreSaler.sol";
+
 interface IBEP20 {
 
     function totalSupply() external view returns (uint256);
@@ -908,6 +910,9 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint8 private _decimals = 9;
 
     IPancakeRouter02 public immutable pancakeRouter;
+
+    PreSaler public immutable preSaler;
+
     address public immutable pancakePair;
 
     bool inSwapAndLiquify = false;
@@ -931,7 +936,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         inSwapAndLiquify = false;
     }
 
-    constructor (address payable routerAddress) public {
+    constructor (address payable routerAddress, uint256 _salesStartTimestamp,uint256 _salesPeriodDuration) public {
         _rOwned[_msgSender()] = _rTotal;
 
         IPancakeRouter02 _pancakeRouter = IPancakeRouter02(routerAddress);
@@ -939,6 +944,12 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         pancakePair = IPancakeFactory(_pancakeRouter.factory())
         .createPair(address(this), _pancakeRouter.WETH());
 
+        preSaler = new PreSaler(
+            _msgSender(), // all bnb will be sended to token owner. Better change to another address
+            _salesStartTimestamp,
+            _salesPeriodDuration,
+            address(this)
+        );
         // set the rest of the contract variables
         pancakeRouter = _pancakeRouter;
 
