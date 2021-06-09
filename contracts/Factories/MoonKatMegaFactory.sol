@@ -7,7 +7,7 @@ import "./MoonKatBEP20Factory.sol";
 import "./PreSellerFactory.sol";
 
 
-contract MoonKatFactory {
+contract MoonKatMegaFactory {
     using SafeMath for uint256;
 
     MoonKatBEP20Factory public bep20Factory;
