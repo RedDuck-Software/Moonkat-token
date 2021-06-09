@@ -2,19 +2,15 @@
 
 pragma solidity ^0.6.12;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-import {
-    SafeMath as OZSafeMath
-} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {IBEP20, SafeMath} from "./MoonKat.sol";
 
 contract PreSeller {
-    using OZSafeMath for uint256;
+    using SafeMath for uint256;
 
     string public termsAndConditions =
         "By interacting with this contract, I confirm I am not a US citizen. I agree to be bound by the terms found at [termsAndConditionUrl]";
 
-    IERC20 public tokenOnSale;
+    IBEP20 public tokenOnSale;
     uint256 public saleStart;
     uint256 public saleDuration;
     address payable moneyTransferTo;
@@ -54,7 +50,7 @@ contract PreSeller {
             "You should provide valid forwarded address"
         );
 
-        tokenOnSale = IERC20(_tokenOnSale);
+        tokenOnSale = IBEP20(_tokenOnSale);
         saleStart = _saleStart;
         saleDuration = _saleDuration;
         moneyTransferTo = _moneyTransferTo;
