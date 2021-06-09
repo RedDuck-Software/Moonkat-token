@@ -25,9 +25,16 @@ contract MoonKatMegaFactory {
 
         uint256 preSellAmount = moonKat.balanceOf(address(this)).div(100).mul(10);
 
+        // transfers 10% of totalSupply to preSale contract
         moonKat.transfer(
             address(preSeller),
             preSellAmount
+        );
+
+        // transfer remains token to msg.sender
+        moonKat.transfer(
+            msg.sender,
+            moonKat.balanceOf(address(this))
         );
     }
 }
