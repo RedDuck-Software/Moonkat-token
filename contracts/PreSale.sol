@@ -40,9 +40,13 @@ contract PreSale {
         require(!_isSalePeriodEnd(), "Sale is not active");
         _;
     }
+    modifier onlyAfterEnd() {
+        require(saleEndTimestamp < block.timestamp, "Is not ended yet");
+        _;
+    }
 
-    modifier onlyInUnactive() {
-        require(_isSalePeriodEnd(), "Sale is still active");
+    modifier onlyAfterStart() {
+        require(saleStart < block.timestamp, "Is not started yet");
         _;
     }
 
@@ -70,6 +74,7 @@ contract PreSale {
         saleStart = _saleStart;
         saleDuration = _saleDuration;
         moneyTransferTo = _moneyTransferTo;
+        saleEndTimestamp = _saleStart + _saleDuration;
     }
 
     function buy() public payable onlyInActive {
@@ -86,7 +91,7 @@ contract PreSale {
         uint256 tokensAmount = _calculateTokenAmount(msg.value);
 
         require(
-            tokenOnSale.balanceOf(address(this)) >= tokensAmount,
+            tokenOnSale.balanceOf(address(this))- reservedTokens >= tokensAmount,
             "PreSale inssufisient token balance"
         );
 
@@ -104,7 +109,7 @@ contract PreSale {
         reservedTokens += tokensToReserve;
     }
 
-    function withdrawTokens() public onlyInUnactive {
+    function withdrawTokens() public onlyAfterEnd {
         if (!secondPaymentSucceed) {
             require(
                 saleEndTimestamp + monthDurationInSeconds < block.timestamp,
@@ -136,7 +141,7 @@ contract PreSale {
         }
     }
 
-    function withdrawRemainderTokens() public onlyInUnactive {
+    function withdrawRemainderTokens() public onlyAfterEnd {
         tokenOnSale.transfer(
             moneyTransferTo,
             tokenOnSale.balanceOf(address(this))
