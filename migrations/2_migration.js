@@ -15,15 +15,10 @@ module.exports = async function (deployer, network, accounts) {
 
   await deployer.deploy(PreSaleFactory, Test.address); // deploy factory
 
-  console.log(accounts[0]);
-  console.log((await testInstance.balanceOf(accounts[0])).divn(10));
-
   await testInstance.excludeFromFee(PreSaleFactory.address);
 
   await testInstance.transfer(
     PreSaleFactory.address,
     (await testInstance.balanceOf(accounts[0])).divn(10) // div + round
   ); // transfer 10% of total supply to factory
-
-  console.log(await testInstance.balanceOf(PreSaleFactory.address));
 };
