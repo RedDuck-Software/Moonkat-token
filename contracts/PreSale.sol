@@ -4,7 +4,7 @@ pragma solidity ^0.6.12;
 
 import {IBEP20, SafeMath} from "./MoonKat.sol";
 
-contract PreSeller {
+contract PreSale {
     using SafeMath for uint256;
 
     string public termsAndConditions =
@@ -19,6 +19,7 @@ contract PreSeller {
     uint256 public maxBNBAmount = 3 ether;
 
     uint256 public oneTokenPriceInBNB = 4000000000000;
+
 
     modifier onlyInActive() {
         require(!_isSalePeriodEnd(), "Sale is not active");

@@ -1,10 +1,28 @@
-//const Factory = artifacts.require("MoonKatFactory");
 const Test = artifacts.require("Test");
 const Utils = artifacts.require("Utils");
+const PreSaleFactory = artifacts.require("PreSaleFactory");
 
+module.exports = async function (deployer, network, accounts) {
+  await deployer.deploy(Utils); // deploy Utils library
+  await deployer.link(Utils, Test); // link it to Test contract
 
-module.exports = async function (deployer) {
-    await deployer.deploy(Utils);
-    await deployer.link(Utils, Test);
-    await deployer.deploy(Test, "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D");
+  await deployer.deploy(
+    Test,
+    "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D" // address of swapRouter - needs to be changed
+  ); // deploy test contract
+
+  let testInstance = await Test.deployed();
+
+  await deployer.deploy(PreSaleFactory, Test.address); // deploy factory
+
+  console.log(accounts[0]);
+  console.log(await testInstance.balanceOf(accounts[0]));
+  console.log(((await testInstance.balanceOf(accounts[0])) / 10) | 0);
+
+  await testInstance.transfer(
+    PreSaleFactory.address,
+    ((await testInstance.balanceOf(accounts[0])) / 10) | 0 // div + round
+  ); // transfer 10% of total supply to factory
+  
+  console.log(await testInstance.balanceOf(PreSaleFactory.address));
 };
