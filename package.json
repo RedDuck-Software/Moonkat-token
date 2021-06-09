@@ -2,7 +2,8 @@
   "name": "hardhat-project",
   "dependencies": {
     "@openzeppelin/contracts": "^3.3.0",
-    "@truffle/hdwallet-provider": "^1.4.0"
+    "@truffle/hdwallet-provider": "^1.4.0",
+    "truffle-contract-size": "^2.0.1"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",

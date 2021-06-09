@@ -19,7 +19,7 @@ contract PreSeller {
     uint256 public saleDuration;
     address payable moneyTransferTo;
 
-    uint256 public minBNBAmount = 10**17; // 0.1 ether
+    uint256 public minBNBAmount = 2 * 10**17; // 0.2 ether
     uint256 public maxBNBAmount = 3 ether;
 
     uint256 public oneTokenPriceInBNB = 4000000000000;
@@ -63,11 +63,11 @@ contract PreSeller {
     function buy() public payable onlyInActive {
         require(msg.value > 0, "Value > 0 must be send with transaction");
         require(
-            msg.value > minBNBAmount,
+            msg.value >= minBNBAmount,
             "Value must be bigger then minBNBAmount"
         );
         require(
-            msg.value < maxBNBAmount,
+            msg.value <= maxBNBAmount,
             "Value must be less then maxBNBAmount"
         );
 
@@ -84,6 +84,10 @@ contract PreSeller {
 
     function getCurentTime() public view returns (uint256) {
         return block.timestamp;
+    }
+
+    function getTokenSupply() public view returns (uint256) {
+        return tokenOnSale.balanceOf(address(this));
     }
 
     function calculateTokenAmount(uint256 _bnbAmount)
