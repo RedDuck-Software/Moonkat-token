@@ -148,7 +148,7 @@ contract PreSale {
     }
 
     function getTokenSupply() public view returns (uint256) {
-        return tokenOnSale.balanceOf(address(this));
+        return tokenOnSale.balanceOf(address(this)) - reservedTokens;
     }
 
     function calculateTokenAmount(uint256 _bnbAmount)
