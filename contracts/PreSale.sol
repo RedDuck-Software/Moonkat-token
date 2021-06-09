@@ -18,7 +18,7 @@ contract PreSale {
     uint256 public minBNBAmount = 2 * 10**17; // 0.2 ether
     uint256 public maxBNBAmount = 3 ether;
 
-    uint256 public oneTokenPriceInBNB = 4000000000000;
+    uint256 public oneTokenPriceInBNB = 1333333333000;
 
 
     modifier onlyInActive() {
