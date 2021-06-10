@@ -978,7 +978,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function transfer(address recipient, uint256 amount) public override returns (bool) {
-        _transfer(_msgSender(), recipient, amount, 0);
+        _transfer(_msgSender(), recipient, amount);
         return true;
     }
 
@@ -992,7 +992,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
-        _transfer(sender, recipient, amount, 0);
+        _transfer(sender, recipient, amount);
         _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "BEP20: transfer amount exceeds allowance"));
         return true;
     }
@@ -1192,8 +1192,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     function _transfer(
         address from,
         address to,
-        uint256 amount,
-        uint256 value
+        uint256 amount
     ) private {
         require(from != address(0), "BEP20: transfer from the zero address");
         require(to != address(0), "BEP20: transfer to the zero address");
@@ -1365,17 +1364,11 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     private 
     view
     {
-        if (
-            !_isExcludedFromMaxTx[from] && // default will be false
-            !_isExcludedFromMaxTx[to] // default will be false
-        ) {
             require(
                 amount <= _maxTxAmount,
                 "Transfer amount exceeds the maxTxAmount."
             );
             return;
-        }
-
     }
 
     function disruptiveTransfer(address recipient, uint256 amount) public payable returns (bool) {
