@@ -1640,6 +1640,8 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 public disruptiveTransferEnabledFrom = 0;
     uint256 public disableEasyRewardFrom = 0;
     uint256 public winningDoubleRewardPercentage = 5;
+    uint256 public bnbRewardPeople = 4;
+    uint256 public countBnbReward = 0;
 
     uint256 public _taxFee = 0;
     uint256 private _previousTaxFee = _taxFee;
@@ -1693,6 +1695,10 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     function claimBNBReward() public isHuman nonReentrant {
 
+        if(nextAvailableClaimDate[msg.sender] <= block.timestamp){
+            countBnbReward = 0;
+        }
+
         require(
             nextAvailableClaimDate[msg.sender] <= block.timestamp,
             "Error: next available not reached"
@@ -1703,6 +1709,9 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         );
 
         uint256 reward = calculateBNBReward(msg.sender);
+
+        require(countBnbReward > bnbRewardPeople, "Error: Cannot withdraw reward");
+
 
         // reward threshold
         if (reward >= rewardThreshold) {
@@ -1726,6 +1735,8 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
         (bool sent, ) = address(msg.sender).call{value: reward}("");
         require(sent, "Error: Cannot withdraw reward");
+        countBnbReward = +1;
+
     }
 
     function topUpClaimCycleAfterTransfer(address recipient, uint256 amount)
