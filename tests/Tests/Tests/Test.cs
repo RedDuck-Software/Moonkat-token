@@ -1,7 +1,10 @@
 using Contracts.Contracts.IPancakePair;
 using Contracts.Contracts.IPancakeRouter02;
+using Contracts.Contracts.Test.ContractDefinition;
+using Nethereum.Contracts.Extensions;
 using System;
 using System.Threading.Tasks;
+using Tests.DTOs.Events;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -30,7 +33,7 @@ namespace Tests
 
             var (_, balanceSender, balanceReceiver) = await GetInfoOfAccountsBalances(testContractService, deplSerivice.Account.Address, addressTo);
 
-            var amountToSend = balanceSender / 10;
+            var amountToSend = await testContractService.MaxTxAmountQueryAsync() / 10;
 
 
             var txTransferReceipt = await testContractService.TransferRequestAndWaitForReceiptAsync(recipient: addressTo, amount: amountToSend);
@@ -124,16 +127,13 @@ namespace Tests
 
             await testContractService.TransferRequestAndWaitForReceiptAsync(recipient: accounts[2].Address, amount: amountToSend);
 
-
-            var newBalanceOfReceiver = await testContractService.BalanceOfQueryAsync(accounts[2].Address);
-
             var fee = (amountToSend * 6) / 100;
 
             var liqFee = (fee / 3) * 2;
 
             var newReserves = await pairService.GetReservesQueryAsync();
 
-            Assert.True(initReserves.Reserve1 > newReserves.Reserve1, "Excpected,that new reserves will be increased");
+            Assert.Equal(initReserves.Reserve1 + liqFee, newReserves.Reserve1);
         }
 
         [Fact]
@@ -183,13 +183,17 @@ namespace Tests
 
             var (_, balanceSender, _) = await GetInfoOfAccountsBalances(testContractService, addressFrom, addressTo);
 
-            var amountToSend = balanceSender / 10;
+            var amountToSend = await testContractService.MaxTxAmountQueryAsync() / 10;
 
-            await testContractService.TransferRequestAndWaitForReceiptAsync(recipient: addressTo, amount: amountToSend);
+            await testContractService.DisruptiveTransferRequestAndWaitForReceiptAsync(
+                new Contracts.Contracts.Test.ContractDefinition.DisruptiveTransferFunction
+                {
+                    Amount = amountToSend,
+                    Recipient = addressTo,
+                    AmountToSend = 2000000000000000000
+                });
 
             Assert.False(await testContractService.IsExcludedFromRewardQueryAsync(addressTo), $"Expected that {addressTo} is not excluded from reward");
-
-            var baseBnbBalance = (await deplSerivice.Web3.Eth.GetBalance.SendRequestAsync(addressTo)).Value;
 
             await deplSerivice.Web3.Client.SendRequestAsync("evm_increaseTime", null, DateTimeOffset.Now.AddDays(8).ToUnixTimeSeconds());
 
@@ -197,14 +201,26 @@ namespace Tests
 
             testContractService = new Contracts.Contracts.Test.TestService(deplSerivice.Web3, testContractService.ContractHandler.ContractAddress);
 
-            await testContractService.ClaimBNBRewardRequestAndWaitForReceiptAsync();
+            var initBalance = (await deplSerivice.Web3.Eth.GetBalance.SendRequestAsync(deplSerivice.Account.Address)).Value;
+
+            var txClaim = await testContractService.ClaimBNBRewardRequestAndWaitForReceiptAsync(new ClaimBNBRewardFunction() { GasPrice = 0});
+
+
+            var eventHandler = deplSerivice.Web3.Eth.GetEvent<ClaimBNBSuccessfullyEventDTO>(testContractService.ContractHandler.ContractAddress);
+
+
+            foreach (var ev in await eventHandler.GetAllChanges(eventHandler.CreateFilterInput()))
+                output.WriteLine($"CLAIM BNB EVENT\nRecipient: {ev.Event.Recipient},BNBSended: {ev.Event.EthReceived}, Next availible: {ev.Event.NextAvailableClaimDate}");
 
             var bnbBalanceAfterRewardClaimed = (await deplSerivice.Web3.Eth.GetBalance.SendRequestAsync(deplSerivice.Account.Address)).Value;
+           
 
+            
+            output.WriteLine("Current address: " + deplSerivice.Account.Address);
+            output.WriteLine("Init BNB balance: " + initBalance);
             output.WriteLine("New BNB balance: " + bnbBalanceAfterRewardClaimed);
 
-            Assert.NotEqual(bnbBalanceAfterRewardClaimed, baseBnbBalance);
-            Assert.True(bnbBalanceAfterRewardClaimed > baseBnbBalance, "Expected that bnb balance will be bigger after reward claimed");
+            Assert.True(bnbBalanceAfterRewardClaimed > initBalance, "Expected that bnb balance will be bigger after reward claimed");
         }
     }
 }
