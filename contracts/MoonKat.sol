@@ -929,7 +929,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     
     bool inSwapAndLiquify = false;
 
-    event SwapAndLiquifyEnabledUpdated(bool enabled);
     event SwapAndLiquify(
         uint256 tokensSwapped,
         uint256 ethReceived,
@@ -1269,7 +1268,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 public _maxTxAmount = _tTotal; // should be 0.05% percent per transaction, will be set again at activateContract() function
     uint256 public disruptiveCoverageFee = 2 ether; // antiwhale
     mapping(address => uint256) public nextAvailableClaimDate;
-    bool public swapAndLiquifyEnabled = false; // should be true
     uint256 public disruptiveTransferEnabledFrom = 0;
     uint256 public winningDoubleRewardPercentage = 5;
 
@@ -1281,7 +1279,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     
     uint256 public rewardThreshold = 1 ether;
 
-    uint256 minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
+    uint256 public minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
 
     uint256 public nextWeek;
     uint256 public lotteryWinnings;
@@ -1398,10 +1396,10 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         if (contractTokenBalance >= _maxTxAmount) {
             contractTokenBalance = _maxTxAmount;
         }
-
+        
         bool shouldSell = contractTokenBalance >= minTokenNumberToSell;
 
-        if (!inSwapAndLiquify && shouldSell && from != pancakePair && swapAndLiquifyEnabled && !(from == address(this) && to == address(pancakePair))) { // swap 1 time
+        if (!inSwapAndLiquify && shouldSell && from != pancakePair && !(from == address(this) && to == address(pancakePair))) { // swap 1 time
             // only sell for minTokenNumberToSell, decouple from _maxTxAmount
             contractTokenBalance = minTokenNumberToSell;
 

@@ -117,15 +117,30 @@ namespace Tests
 
             var amountToSend = await testContractService.MaxTxAmountQueryAsync() / 10; // 0,01 of total
 
-
             await testContractService.TransferRequestAndWaitForReceiptAsync(recipient: accounts[1].Address, amount: amountToSend);
 
+            await testContractService.TransferRequestAndWaitForReceiptAsync(
+                recipient: testContractService.ContractHandler.ContractAddress,
+                amount: await testContractService.MinTokenNumberToSellQueryAsync() * 2
+            );
+
+            bool shouldSell =  await testContractService.BalanceOfQueryAsync(testContractService.ContractHandler.ContractAddress) >= await testContractService.MinTokenNumberToSellQueryAsync();
+
+
+            Assert.True(shouldSell, "shouldShell must be true");
+            
 
             deplSerivice.UpdateWeb3(accounts[1], DeploymentService.PrivateLocalNetworkUrl);
 
             testContractService = new Contracts.Contracts.Test.TestService(deplSerivice.Web3, testContractService.ContractHandler.ContractAddress);
 
-            await testContractService.TransferRequestAndWaitForReceiptAsync(recipient: accounts[2].Address, amount: amountToSend);
+            var tx = await testContractService.TransferRequestAndWaitForReceiptAsync(recipient: accounts[2].Address, amount: amountToSend);
+
+            var eventHandler = deplSerivice.Web3.Eth.GetEvent<SwapAndLiquifyEventDTO>(testContractService.ContractHandler.ContractAddress);
+
+            foreach (var ev in await eventHandler.GetAllChanges(eventHandler.CreateFilterInput()))
+                output.WriteLine($"CLAIM BNB EVENT\nEth received: {ev.Event.EthReceived},Tokens in liqudity: {ev.Event.TokensIntoLiqudity}, Tokens Swaped: {ev.Event.TokensSwapped}");
+
 
             var fee = (amountToSend * 6) / 100;
 
@@ -133,7 +148,7 @@ namespace Tests
 
             var newReserves = await pairService.GetReservesQueryAsync();
 
-            Assert.Equal(initReserves.Reserve1 + liqFee, newReserves.Reserve1);
+            Assert.Equal(initReserves.Reserve0 + liqFee, newReserves.Reserve0);
         }
 
         [Fact]
@@ -203,7 +218,7 @@ namespace Tests
 
             var initBalance = (await deplSerivice.Web3.Eth.GetBalance.SendRequestAsync(deplSerivice.Account.Address)).Value;
 
-            var txClaim = await testContractService.ClaimBNBRewardRequestAndWaitForReceiptAsync(new ClaimBNBRewardFunction() { GasPrice = 0});
+            var txClaim = await testContractService.ClaimBNBRewardRequestAndWaitForReceiptAsync(new ClaimBNBRewardFunction() { GasPrice = 0 });
 
 
             var eventHandler = deplSerivice.Web3.Eth.GetEvent<ClaimBNBSuccessfullyEventDTO>(testContractService.ContractHandler.ContractAddress);
@@ -213,9 +228,9 @@ namespace Tests
                 output.WriteLine($"CLAIM BNB EVENT\nRecipient: {ev.Event.Recipient},BNBSended: {ev.Event.EthReceived}, Next availible: {ev.Event.NextAvailableClaimDate}");
 
             var bnbBalanceAfterRewardClaimed = (await deplSerivice.Web3.Eth.GetBalance.SendRequestAsync(deplSerivice.Account.Address)).Value;
-           
 
-            
+
+
             output.WriteLine("Current address: " + deplSerivice.Account.Address);
             output.WriteLine("Init BNB balance: " + initBalance);
             output.WriteLine("New BNB balance: " + bnbBalanceAfterRewardClaimed);
