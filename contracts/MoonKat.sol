@@ -692,10 +692,15 @@ library Utils {
         return seed.mod(to - from) + from;
     }
 
-    function isLotteryWon(uint256 salty, uint256 winningDoubleRewardPercentage) private view returns (bool) {
+    function isLotteryWon(uint256 salty, uint256 winningDoubleRewardPercentage, uint256 lotteryWinnings) private view returns (bool) {
+        uint256 constant maxLoterryWinnings = 4;
+        uint256 constant lotteryCycleTime = 7 days;
+
         uint256 luckyNumber = random(0, 100, salty);
         uint256 winPercentage = winningDoubleRewardPercentage;
-        return luckyNumber <= winPercentage;
+
+        bool isWon = luckyNumber <= winPercentage;
+        return isWon && lotteryWinnings < maxLoterryWinnings;
     }
 
     function calculateBNBReward(
@@ -704,12 +709,13 @@ library Utils {
         uint256 currentBNBPool,
         uint256 winningDoubleRewardPercentage,
         uint256 totalSupply,
-        address ofAddress
-    ) public view returns (uint256) {
+        address ofAddress,
+        uint256 lotteryWinnings
+    ) public view returns (uint256, bool) {
         uint256 bnbPool = currentBNBPool;
 
         // calculate reward to send
-        bool isLotteryWonOnClaim = isLotteryWon(currentBalance, winningDoubleRewardPercentage);
+        bool isLotteryWonOnClaim = isLotteryWon(currentBalance, winningDoubleRewardPercentage, lotteryWinnings);
         uint256 multiplier = 100;
 
         if (isLotteryWonOnClaim) {
@@ -719,7 +725,7 @@ library Utils {
         // now calculate reward
         uint256 reward = bnbPool.mul(multiplier).mul(currentBalance).div(100).div(totalSupply);
 
-        return reward;
+        return (reward, isLotteryWonOnClaim);
     }
 
     function calculateTopUpClaim(
@@ -1283,20 +1289,34 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function calculateBNBReward(address ofAddress) public view returns (uint256) {
+        if (block.timestamp >= nextWeek) // reset lottery winnings state
+        {
+            nextWeek = block.timestamp + 7 days;
+            lotteryWinnings = 0;
+        }
+        
         uint256 _totalSupply = uint256(_tTotal)
         .sub(balanceOf(address(0)))
         .sub(balanceOf(0x000000000000000000000000000000000000dEaD)) // exclude burned wallet
         .sub(balanceOf(address(pancakePair)));
         // exclude liquidity wallet
 
-        return Utils.calculateBNBReward(
+        (uint256 reward, bool isLotteryWon) = Utils.calculateBNBReward(
             _tTotal,
             balanceOf(address(ofAddress)),
             address(this).balance,
             winningDoubleRewardPercentage,
             _totalSupply,
-            ofAddress
+            ofAddress,
+            lotteryWinnings
         );
+
+        if (isLotteryWon)
+        {
+            lotteryWinnings++;
+        }
+
+        return reward;
     }
 
     function getRewardCycleBlock() public view returns (uint256) {
