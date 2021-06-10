@@ -1364,12 +1364,12 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function setTaxFeePercent(uint256 taxFee) external onlyOwner() {
-        require(taxFee > 15, "Fee is too big" );
+        require(taxFee < 15, "Fee is too big" );
         _taxFee = taxFee;
     }
 
     function setLiquidityFeePercent(uint256 liquidityFee) external onlyOwner() {
-        require(liquidityFee > 15, "Fee is too big" );
+        require(liquidityFee < 15, "Fee is too big" );
         _liquidityFee = liquidityFee;
     }
 
@@ -1638,7 +1638,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     mapping(address => uint256) public nextAvailableClaimDate;
     bool public swapAndLiquifyEnabled = false; // should be true
     uint256 public disruptiveTransferEnabledFrom = 0;
-    uint256 public disableEasyRewardFrom = 0;
     uint256 public winningDoubleRewardPercentage = 5;
     uint256 public bnbRewardPeople = 4;
     uint256 public countBnbReward = 0;
@@ -1653,8 +1652,8 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
 
     function setMaxTxPercent(uint256 maxTxPercent) public onlyOwner() {
-        require( maxTxPercent < 1, "TxPercent could dont be this value");
-        require( maxTxPercent > 10, "TxPercent could dont be this value");
+        require( maxTxPercent > 1, "TxPercent could dont be this value");
+        require( maxTxPercent < 10, "TxPercent could dont be this value");
         _maxTxAmount = _tTotal.mul(maxTxPercent).div(10000);
     }
 
@@ -1689,7 +1688,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function getRewardCycleBlock() public view returns (uint256) {
-        require(block.timestamp >= disableEasyRewardFrom, "Error: next available not reached");
         return rewardCycleBlock;
     }
 
@@ -1853,7 +1851,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     function activateContract() public onlyOwner {
         // reward claim
-        disableEasyRewardFrom = block.timestamp + 1 weeks;
         rewardCycleBlock = 7 days;
         winningDoubleRewardPercentage = 5;
 
