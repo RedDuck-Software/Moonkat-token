@@ -1041,29 +1041,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         return rAmount.div(currentRate);
     }
 
-    function excludeFromReward(address account) public onlyOwner() {
-        // require(account != 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, 'We can not exclude Pancake router.');
-        require(!_isExcluded[account], "Account is already excluded");
-        if (_rOwned[account] > 0) {
-            _tOwned[account] = tokenFromReflection(_rOwned[account]);
-        }
-        _isExcluded[account] = true;
-        _excluded.push(account);
-    }
-
-    function includeInReward(address account) external onlyOwner() {
-        require(_isExcluded[account], "Account is already excluded");
-        for (uint256 i = 0; i < _excluded.length; i++) {
-            if (_excluded[i] == account) {
-                _excluded[i] = _excluded[_excluded.length - 1];
-                _tOwned[account] = 0;
-                _isExcluded[account] = false;
-                _excluded.pop();
-                break;
-            }
-        }
-    }
-
     function _transferBothExcluded(address sender, address recipient, uint256 tAmount) private {
         (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tLiquidity) = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
@@ -1084,16 +1061,19 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function setTaxFeePercent(uint256 taxFee) external onlyOwner() {
+        uint256 constant private maxTaxFeePerc = 15;
+        uint256 constant private minTaxFeePerc = 0;
+        
+        require (taxFee >= minTaxFeePerc && taxFee <= maxTaxFeePerc, "taxFee argument is not within the allowed boundary");       
         _taxFee = taxFee;
     }
 
     function setLiquidityFeePercent(uint256 liquidityFee) external onlyOwner() {
+        uint256 constant private maxLiquidityFeePerc = 15;
+        uint256 constant private minLiquidityFeePerc = 0;
+        
+        require (liquidityFee >= minLiquidityFeePerc && liquidityFee <= minLiquidityFeePerc, "liquidityFee argument is not within the allowed boundary");
         _liquidityFee = liquidityFee;
-    }
-
-    function setSwapAndLiquifyEnabled(bool _enabled) public onlyOwner {
-        swapAndLiquifyEnabled = _enabled;
-        emit SwapAndLiquifyEnabledUpdated(_enabled);
     }
 
     //to receive BNB from pancakeRouter when swapping
@@ -1271,14 +1251,12 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     // Innovation for protocol by MoonRat Team
     uint256 public rewardCycleBlock = 7 days;
-    uint256 public easyRewardCycleBlock = 1 days;
     uint256 public threshHoldTopUpRate = 2; // 2 percent
     uint256 public _maxTxAmount = _tTotal; // should be 0.05% percent per transaction, will be set again at activateContract() function
     uint256 public disruptiveCoverageFee = 2 ether; // antiwhale
     mapping(address => uint256) public nextAvailableClaimDate;
     bool public swapAndLiquifyEnabled = false; // should be true
     uint256 public disruptiveTransferEnabledFrom = 0;
-    uint256 public disableEasyRewardFrom = 0;
     uint256 public winningDoubleRewardPercentage = 5;
 
     uint256 public _taxFee = 0;
@@ -1286,11 +1264,17 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     uint256 public _liquidityFee = 6; // 2% will be added pool, 4% will be converted to BNB
     uint256 private _previousLiquidityFee = _liquidityFee;
+    
     uint256 public rewardThreshold = 1 ether;
 
     uint256 minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
 
     function setMaxTxPercent(uint256 maxTxPercent) public onlyOwner() {
+        uint256 constant maxBoundary = 10; // 0.1%
+        uint256 constant minBoundary = 1; // 0.01%
+
+        require(maxTxPercent >= minBoundary && maxTxPercent <= maxBoundary, "the maxTxPercent argument is not within the boundary");
+
         _maxTxAmount = _tTotal.mul(maxTxPercent).div(10000);
     }
 
@@ -1316,8 +1300,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function getRewardCycleBlock() public view returns (uint256) {
-        if (block.timestamp >= disableEasyRewardFrom) return rewardCycleBlock;
-        return easyRewardCycleBlock;
+        return rewardCycleBlock;
     }
 
     function claimBNBReward() isHuman nonReentrant public {
@@ -1427,9 +1410,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     function activateContract() public onlyOwner {
         // reward claim
-        disableEasyRewardFrom = block.timestamp + 1 weeks;
         rewardCycleBlock = 7 days;
-        easyRewardCycleBlock = 1 days;
 
         winningDoubleRewardPercentage = 5;
 
