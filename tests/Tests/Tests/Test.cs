@@ -133,7 +133,7 @@ namespace Tests
 
             var newReserves = await pairService.GetReservesQueryAsync();
 
-            Assert.True(initReserves.Reserve1 > newReserves.Reserve1, "Excpected,that new reserbes will be increased");
+            Assert.True(initReserves.Reserve1 > newReserves.Reserve1, "Excpected,that new reserves will be increased");
         }
 
         [Fact]
@@ -164,7 +164,7 @@ namespace Tests
                 {
                     Amount = amountToSend,
                     Recipient = addressTo,
-                    // AmountToSend = 2 * 10 ^ 18
+                    AmountToSend = 2000000000000000000
                 });
 
             Assert.Equal(await testContractService.BalanceOfQueryAsync(addressTo), amountToSend);
