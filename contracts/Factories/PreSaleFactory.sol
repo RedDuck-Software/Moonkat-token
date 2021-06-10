@@ -17,14 +17,16 @@ contract PreSaleFactory {
         address payable _moneyTransferTo,
         uint256 _saleStart,
         uint256 _saleDuration,
-        address _tokenOnSale
+        address _tokenOnSale,
+        address[] memory whitelist
     ) public returns (address) {
         PreSale instance =
             new PreSale(
                 _moneyTransferTo,
                 _saleStart,
                 _saleDuration,
-                _tokenOnSale
+                _tokenOnSale,
+                whitelist
             );
 
         // transfers 10% of totalSupply to preSale contract

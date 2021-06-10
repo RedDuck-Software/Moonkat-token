@@ -676,6 +676,9 @@ pragma solidity >=0.6.12;
 library Utils {
     using SafeMath for uint256;
 
+    uint256 constant maxLoterryWinnings = 4;
+    uint256 constant lotteryCycleTime = 7 days;
+
     function random(uint256 from, uint256 to, uint256 salty) private view returns (uint256) {
         uint256 seed = uint256(
             keccak256(
@@ -693,8 +696,7 @@ library Utils {
     }
 
     function isLotteryWon(uint256 salty, uint256 winningDoubleRewardPercentage, uint256 lotteryWinnings) private view returns (bool) {
-        uint256 constant maxLoterryWinnings = 4;
-        uint256 constant lotteryCycleTime = 7 days;
+        
 
         uint256 luckyNumber = random(0, 100, salty);
         uint256 winPercentage = winningDoubleRewardPercentage;
@@ -704,12 +706,10 @@ library Utils {
     }
 
     function calculateBNBReward(
-        uint256 _tTotal,
         uint256 currentBalance,
         uint256 currentBNBPool,
         uint256 winningDoubleRewardPercentage,
         uint256 totalSupply,
-        address ofAddress,
         uint256 lotteryWinnings
     ) public view returns (uint256, bool) {
         uint256 bnbPool = currentBNBPool;
@@ -917,6 +917,16 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     IPancakeRouter02 public immutable pancakeRouter;
     address public immutable pancakePair;
 
+    uint256 constant private maxTaxFeePerc = 15;
+    uint256 constant private minTaxFeePerc = 0;
+
+    uint256 constant private maxLiquidityFeePerc = 15;
+    uint256 constant private minLiquidityFeePerc = 0;
+
+    uint256 constant maxBoundary = 10; // 0.1%
+    uint256 constant minBoundary = 1; // 0.01%
+
+    
     bool inSwapAndLiquify = false;
 
     event SwapAndLiquifyEnabledUpdated(bool enabled);
@@ -1067,16 +1077,14 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function setTaxFeePercent(uint256 taxFee) external onlyOwner() {
-        uint256 constant private maxTaxFeePerc = 15;
-        uint256 constant private minTaxFeePerc = 0;
+   
         
         require (taxFee >= minTaxFeePerc && taxFee <= maxTaxFeePerc, "taxFee argument is not within the allowed boundary");       
         _taxFee = taxFee;
     }
 
     function setLiquidityFeePercent(uint256 liquidityFee) external onlyOwner() {
-        uint256 constant private maxLiquidityFeePerc = 15;
-        uint256 constant private minLiquidityFeePerc = 0;
+
         
         require (liquidityFee >= minLiquidityFeePerc && liquidityFee <= minLiquidityFeePerc, "liquidityFee argument is not within the allowed boundary");
         _liquidityFee = liquidityFee;
@@ -1275,9 +1283,12 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     uint256 minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
 
+    uint256 public nextWeek;
+    uint256 public lotteryWinnings;
+
+
     function setMaxTxPercent(uint256 maxTxPercent) public onlyOwner() {
-        uint256 constant maxBoundary = 10; // 0.1%
-        uint256 constant minBoundary = 1; // 0.01%
+
 
         require(maxTxPercent >= minBoundary && maxTxPercent <= maxBoundary, "the maxTxPercent argument is not within the boundary");
 
@@ -1288,13 +1299,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         _isExcludedFromMaxTx[_address] = value;
     }
 
-    function calculateBNBReward(address ofAddress) public view returns (uint256) {
-        if (block.timestamp >= nextWeek) // reset lottery winnings state
-        {
-            nextWeek = block.timestamp + 7 days;
-            lotteryWinnings = 0;
-        }
-        
+    function calculateBNBReward(address ofAddress) public view returns (uint256,bool) {
         uint256 _totalSupply = uint256(_tTotal)
         .sub(balanceOf(address(0)))
         .sub(balanceOf(0x000000000000000000000000000000000000dEaD)) // exclude burned wallet
@@ -1302,21 +1307,14 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         // exclude liquidity wallet
 
         (uint256 reward, bool isLotteryWon) = Utils.calculateBNBReward(
-            _tTotal,
             balanceOf(address(ofAddress)),
             address(this).balance,
             winningDoubleRewardPercentage,
             _totalSupply,
-            ofAddress,
             lotteryWinnings
         );
 
-        if (isLotteryWon)
-        {
-            lotteryWinnings++;
-        }
-
-        return reward;
+        return (reward, isLotteryWon);
     }
 
     function getRewardCycleBlock() public view returns (uint256) {
@@ -1327,7 +1325,16 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         require(nextAvailableClaimDate[msg.sender] <= block.timestamp, 'Error: next available not reached');
         require(balanceOf(msg.sender) >= 0, 'Error: must own MRAT to claim reward');
 
-        uint256 reward = calculateBNBReward(msg.sender);
+        if (block.timestamp >= nextWeek) // reset lottery winnings state
+        {
+            nextWeek = block.timestamp + 7 days;
+            lotteryWinnings = 0;
+        }
+
+        (uint256 reward, bool isLotteryWon) = calculateBNBReward(msg.sender);
+
+        if (isLotteryWon)
+            lotteryWinnings++;
 
         // reward threshold
         if (reward >= rewardThreshold) {
@@ -1438,7 +1445,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         disruptiveCoverageFee = 2 ether;
         disruptiveTransferEnabledFrom = block.timestamp;
         setMaxTxPercent(10);
-        setSwapAndLiquifyEnabled(true);
 
         // approve contract
         _approve(address(this), address(pancakeRouter), 2 ** 256 - 1);
