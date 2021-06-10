@@ -6,3 +6,6 @@ artifacts
 .vscode
 secrets.json
 build
+bin
+obj
+.vs
