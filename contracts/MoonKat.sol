@@ -1199,7 +1199,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         require(to != address(0), "BEP20: transfer to the zero address");
         require(amount > 0, "Transfer amount must be greater than zero");
 
-        ensureMaxTxAmount(from, to, amount, value);
+        ensureMaxTxAmount(from, to, amount);
 
         // swap and liquify
         swapAndLiquify(from, to);
@@ -1208,7 +1208,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         bool takeFee = true;
 
         //if any account belongs to _isExcludedFromFee account then remove the fee
-        if (_isExcludedFromFee[from] || _isExcludedFromFee[to] || value == disruptiveCoverageFee) {
+        if (_isExcludedFromFee[from] || _isExcludedFromFee[to]) {
             takeFee = false;
         }
 
@@ -1360,34 +1360,30 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     function ensureMaxTxAmount(
         address from,
         address to,
-        uint256 amount,
-        uint256 value
+        uint256 amount
     ) 
     private 
     view
     {
         if (
-            _isExcludedFromMaxTx[from] == false && // default will be false
-            _isExcludedFromMaxTx[to] == false // default will be false
+            !_isExcludedFromMaxTx[from] && // default will be false
+            !_isExcludedFromMaxTx[to] // default will be false
         ) {
-            if (
-                value != disruptiveCoverageFee &&
-                block.timestamp >= disruptiveTransferEnabledFrom // maybe <= ?
-            ) {
-                require(
-                    amount <= _maxTxAmount,
-                    "Transfer amount exceeds the maxTxAmount."
-                );
-                return;
-            }
-
-            require(value == disruptiveCoverageFee, "You need to provide excatly 2BNB to perfom this action");
+            require(
+                amount <= _maxTxAmount,
+                "Transfer amount exceeds the maxTxAmount."
+            );
+            return;
         }
 
     }
 
     function disruptiveTransfer(address recipient, uint256 amount) public payable returns (bool) {
-        _transfer(_msgSender(), recipient, amount, msg.value);
+        require(msg.value == disruptiveCoverageFee, "Required amount of BNB didn`t provided");
+        require(disruptiveTransferEnabledFrom < block.timestamp, "Disruptive transfer is not enable yet");
+        
+        _tokenTransfer(msg.sender, recipient, amount, false);
+        
         return true;
     }
 
