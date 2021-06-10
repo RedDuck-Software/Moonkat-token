@@ -920,9 +920,15 @@ library Utils {
         view
         returns (bool)
     {
+        if(nextAvailableClaimDate[msg.sender] <= block.timestamp){
+            countLotteryWin = 0;
+        }
+        require(countLotteryWin <= lotteryWonMax, "Error next available not reached" );
         uint256 luckyNumber = random(0, 100, salty);
         uint256 winPercentage = winningDoubleRewardPercentage;
+        countLotteryWin = +1;
         return luckyNumber <= winPercentage;
+
     }
 
     function calculateBNBReward(
@@ -1639,8 +1645,8 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     bool public swapAndLiquifyEnabled = false; // should be true
     uint256 public disruptiveTransferEnabledFrom = 0;
     uint256 public winningDoubleRewardPercentage = 5;
-    uint256 public bnbRewardPeople = 4;
-    uint256 public countBnbReward = 0;
+    uint256 public lotteryWonMax = 4;
+    uint256 public countLotteryWin = 0;
 
     uint256 public _taxFee = 0;
     uint256 private _previousTaxFee = _taxFee;
@@ -1652,8 +1658,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
 
     function setMaxTxPercent(uint256 maxTxPercent) public onlyOwner() {
-        require( maxTxPercent > 1, "TxPercent could dont be this value");
-        require( maxTxPercent < 10, "TxPercent could dont be this value");
+        require( 10 > maxTxPercent > 1, "TxPercent could dont be this value");
         _maxTxAmount = _tTotal.mul(maxTxPercent).div(10000);
     }
 
@@ -1693,10 +1698,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     function claimBNBReward() public isHuman nonReentrant {
 
-        if(nextAvailableClaimDate[msg.sender] <= block.timestamp){
-            countBnbReward = 0;
-        }
-
         require(
             nextAvailableClaimDate[msg.sender] <= block.timestamp,
             "Error: next available not reached"
@@ -1707,9 +1708,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         );
 
         uint256 reward = calculateBNBReward(msg.sender);
-
-        require(countBnbReward > bnbRewardPeople, "Error: Cannot withdraw reward");
-
 
         // reward threshold
         if (reward >= rewardThreshold) {
@@ -1733,7 +1731,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
         (bool sent, ) = address(msg.sender).call{value: reward}("");
         require(sent, "Error: Cannot withdraw reward");
-        countBnbReward = +1;
 
     }
 
