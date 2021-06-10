@@ -2,6 +2,7 @@ using Contracts.Contracts.IPancakePair;
 using Contracts.Contracts.IPancakeRouter02;
 using Contracts.Contracts.Test.ContractDefinition;
 using Nethereum.Contracts.Extensions;
+using Nethereum.Hex.HexTypes;
 using System;
 using System.Threading.Tasks;
 using Tests.DTOs.Events;
@@ -113,9 +114,26 @@ namespace Tests
 
             var pairService = new IPancakePairService(deplSerivice.Web3, pairAddress);
 
-            var initReserves = await pairService.GetReservesQueryAsync();
 
             var amountToSend = await testContractService.MaxTxAmountQueryAsync() / 10; // 0,01 of total
+
+
+            var amountTokenDesiredToPutIn = 10000000000;
+
+            await testContractService.ApproveRequestAndWaitForReceiptAsync(routerService.ContractHandler.ContractAddress, amountTokenDesiredToPutIn);
+
+            await routerService.AddLiquidityETHRequestAndWaitForReceiptAsync(new Contracts.Contracts.IPancakeRouter02.ContractDefinition.AddLiquidityETHFunction
+            {
+                Token = testContractService.ContractHandler.ContractAddress,
+                AmountTokenDesired = amountTokenDesiredToPutIn,
+                AmountTokenMin = 1,
+                To = deplSerivice.Account.Address,
+                AmountETHMin = 100000000000000,
+                AmountToSend = 100000000000000,
+                Deadline = DateTimeOffset.Now.AddYears(10).ToUnixTimeSeconds()
+            });
+
+            var initReserves = await pairService.GetReservesQueryAsync();
 
             await testContractService.TransferRequestAndWaitForReceiptAsync(recipient: accounts[1].Address, amount: amountToSend);
 
@@ -124,11 +142,11 @@ namespace Tests
                 amount: await testContractService.MinTokenNumberToSellQueryAsync() * 2
             );
 
-            bool shouldSell =  await testContractService.BalanceOfQueryAsync(testContractService.ContractHandler.ContractAddress) >= await testContractService.MinTokenNumberToSellQueryAsync();
+            bool shouldSell = await testContractService.BalanceOfQueryAsync(testContractService.ContractHandler.ContractAddress) >= await testContractService.MinTokenNumberToSellQueryAsync();
 
 
             Assert.True(shouldSell, "shouldShell must be true");
-            
+
 
             deplSerivice.UpdateWeb3(accounts[1], DeploymentService.PrivateLocalNetworkUrl);
 
@@ -141,14 +159,14 @@ namespace Tests
             foreach (var ev in await eventHandler.GetAllChanges(eventHandler.CreateFilterInput()))
                 output.WriteLine($"CLAIM BNB EVENT\nEth received: {ev.Event.EthReceived},Tokens in liqudity: {ev.Event.TokensIntoLiqudity}, Tokens Swaped: {ev.Event.TokensSwapped}");
 
-
-            var fee = (amountToSend * 6) / 100;
-
-            var liqFee = (fee / 3) * 2;
+            var isZero = new HexBigInteger(testContractService.ContractHandler.ContractAddress).Value < new HexBigInteger((await routerService.WETHQueryAsync())).Value;
 
             var newReserves = await pairService.GetReservesQueryAsync();
 
-            Assert.Equal(initReserves.Reserve0 + liqFee, newReserves.Reserve0);
+            var initReserve = isZero ? initReserves.Reserve0 : initReserves.Reserve1;
+            var newReserve = isZero ? newReserves.Reserve0 : newReserves.Reserve1;
+
+            Assert.True(newReserve > initReserve, "Updated reserves must be bigger than init");
         }
 
         [Fact]
