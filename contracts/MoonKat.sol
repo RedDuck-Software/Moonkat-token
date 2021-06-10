@@ -1198,7 +1198,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         require(to != address(0), "BEP20: transfer to the zero address");
         require(amount > 0, "Transfer amount must be greater than zero");
 
-        ensureMaxTxAmount(from, to, amount);
+        ensureMaxTxAmount(amount);
 
         // swap and liquify
         swapAndLiquify(from, to);
@@ -1357,18 +1357,16 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function ensureMaxTxAmount(
-        address from,
-        address to,
         uint256 amount
     ) 
     private 
     view
     {
-            require(
-                amount <= _maxTxAmount,
-                "Transfer amount exceeds the maxTxAmount."
-            );
-            return;
+        require(
+            amount <= _maxTxAmount,
+        "Transfer amount exceeds the maxTxAmount."
+        );
+        return;
     }
 
     function disruptiveTransfer(address recipient, uint256 amount) public payable returns (bool) {

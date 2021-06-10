@@ -30,11 +30,13 @@ contract PreSale {
 
     address[] public buyers;
 
+    address[] public whitelist;
+
     // first payment - is when user gets 40% of boughth tokens
     bool public secondPaymentSucceed;
     bool public thirdPaymentSucceed;
 
-    uint256 public monthDurationInSeconds = 30 days;
+    uint256 public monthDuration = 30 days;
 
     modifier onlyInActive() {
         require(!_isSalePeriodEnd(), "Sale is not active");
@@ -57,7 +59,8 @@ contract PreSale {
         address payable _moneyTransferTo,
         uint256 _saleStart,
         uint256 _saleDuration,
-        address _tokenOnSale
+        address _tokenOnSale,
+        address[] memory _whitelist
     ) public {
         require(_saleStart != 0, "Sale start should be greater than 0");
         require(_saleDuration != 0, "Sale duration should be greater than 0");
@@ -75,6 +78,7 @@ contract PreSale {
         saleDuration = _saleDuration;
         moneyTransferTo = _moneyTransferTo;
         saleEndTimestamp = _saleStart + _saleDuration;
+        whitelist = _whitelist;
     }
 
     function buy() public payable onlyInActive {
@@ -87,11 +91,17 @@ contract PreSale {
             msg.value <= maxBNBAmount,
             "Value must be less then maxBNBAmount"
         );
+        if (whitelist.length != 0)
+            require(
+                _isContainsInAddressArray(msg.sender, whitelist),
+                "You not included into the whitelist"
+            );
 
         uint256 tokensAmount = _calculateTokenAmount(msg.value);
 
         require(
-            tokenOnSale.balanceOf(address(this))- reservedTokens >= tokensAmount,
+            tokenOnSale.balanceOf(address(this)) - reservedTokens >=
+                tokensAmount,
             "PreSale inssufisient token balance"
         );
 
@@ -103,7 +113,8 @@ contract PreSale {
 
         _sendValue(moneyTransferTo, msg.value);
 
-        if (!_isContainsBuyer(msg.sender)) buyers.push(msg.sender);
+        if (!_isContainsInAddressArray(msg.sender, buyers))
+            buyers.push(msg.sender);
 
         reservedTokensToAddress[msg.sender] += tokensToReserve;
         reservedTokens += tokensToReserve;
@@ -112,7 +123,7 @@ contract PreSale {
     function withdrawTokens() public onlyAfterEnd {
         if (!secondPaymentSucceed) {
             require(
-                saleEndTimestamp + monthDurationInSeconds < block.timestamp,
+                saleEndTimestamp + monthDuration < block.timestamp,
                 "It`s to soon to make 2/3 payment"
             );
 
@@ -127,7 +138,7 @@ contract PreSale {
 
         if (!thirdPaymentSucceed) {
             require(
-                saleEndTimestamp + 2 * monthDurationInSeconds < block.timestamp,
+                saleEndTimestamp + 2 * monthDuration < block.timestamp,
                 "It`s to soon to make 3/3 payment"
             );
 
@@ -182,9 +193,13 @@ contract PreSale {
         return _bnbAmount.div(oneTokenPriceInBNB);
     }
 
-    function _isContainsBuyer(address buyer) private view returns (bool) {
-        for (uint256 i; i < buyers.length; i++)
-            if (buyers[i] == buyer) return true;
+    function _isContainsInAddressArray(address addr, address[] memory array)
+        private
+        pure
+        returns (bool)
+    {
+        for (uint256 i; i < array.length; i++)
+            if (array[i] == addr) return true;
         return false;
     }
 
