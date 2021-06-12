@@ -676,9 +676,6 @@ pragma solidity >=0.6.12;
 library Utils {
     using SafeMath for uint256;
 
-    uint256 constant maxLoterryWinnings = 4;
-    uint256 constant lotteryCycleTime = 7 days;
-
     function random(uint256 from, uint256 to, uint256 salty) private view returns (uint256) {
         uint256 seed = uint256(
             keccak256(
@@ -695,37 +692,13 @@ library Utils {
         return seed.mod(to - from) + from;
     }
 
-    function isLotteryWon(uint256 salty, uint256 winningDoubleRewardPercentage, uint256 lotteryWinnings) private view returns (bool) {
-        
-
-        uint256 luckyNumber = random(0, 100, salty);
-        uint256 winPercentage = winningDoubleRewardPercentage;
-
-        bool isWon = luckyNumber <= winPercentage;
-        return isWon && lotteryWinnings < maxLoterryWinnings;
-    }
-
     function calculateBNBReward(
         uint256 currentBalance,
         uint256 currentBNBPool,
-        uint256 winningDoubleRewardPercentage,
-        uint256 totalSupply,
-        uint256 lotteryWinnings
-    ) public view returns (uint256, bool) {
-        uint256 bnbPool = currentBNBPool;
-
-        // calculate reward to send
-        bool isLotteryWonOnClaim = isLotteryWon(currentBalance, winningDoubleRewardPercentage, lotteryWinnings);
-        uint256 multiplier = 100;
-
-        if (isLotteryWonOnClaim) {
-            multiplier = random(150, 200, currentBalance);
-        }
-
-        // now calculate reward
-        uint256 reward = bnbPool.mul(multiplier).mul(currentBalance).div(100).div(totalSupply);
-
-        return (reward, isLotteryWonOnClaim);
+        uint256 totalSupply
+    ) public pure returns (uint256) {
+        uint256 reward = currentBNBPool.mul(currentBalance).div(totalSupply);
+        return reward;
     }
 
     function calculateTopUpClaim(
@@ -1269,7 +1242,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 public disruptiveCoverageFee = 2 ether; // antiwhale
     mapping(address => uint256) public nextAvailableClaimDate;
     uint256 public disruptiveTransferEnabledFrom = 0;
-    uint256 public winningDoubleRewardPercentage = 5;
 
     uint256 public _taxFee = 0;
     uint256 private _previousTaxFee = _taxFee;
@@ -1281,13 +1253,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     uint256 public minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
 
-    uint256 public nextWeek;
-    uint256 public lotteryWinnings;
-
-
     function setMaxTxPercent(uint256 maxTxPercent) public onlyOwner() {
-
-
         require(maxTxPercent >= minBoundary && maxTxPercent <= maxBoundary, "the maxTxPercent argument is not within the boundary");
 
         _maxTxAmount = _tTotal.mul(maxTxPercent).div(10000);
@@ -1297,22 +1263,18 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         _isExcludedFromMaxTx[_address] = value;
     }
 
-    function calculateBNBReward(address ofAddress) public view returns (uint256,bool) {
+    function calculateBNBReward(address ofAddress) public view returns (uint256 reward) {
         uint256 _totalSupply = uint256(_tTotal)
         .sub(balanceOf(address(0)))
         .sub(balanceOf(0x000000000000000000000000000000000000dEaD)) // exclude burned wallet
         .sub(balanceOf(address(pancakePair)));
         // exclude liquidity wallet
 
-        (uint256 reward, bool isLotteryWon) = Utils.calculateBNBReward(
+        return Utils.calculateBNBReward(
             balanceOf(address(ofAddress)),
             address(this).balance,
-            winningDoubleRewardPercentage,
-            _totalSupply,
-            lotteryWinnings
+            _totalSupply
         );
-
-        return (reward, isLotteryWon);
     }
 
     function getRewardCycleBlock() public view returns (uint256) {
@@ -1323,16 +1285,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         require(nextAvailableClaimDate[msg.sender] <= block.timestamp, 'Error: next available not reached');
         require(balanceOf(msg.sender) >= 0, 'Error: must own MRAT to claim reward');
 
-        if (block.timestamp >= nextWeek) // reset lottery winnings state
-        {
-            nextWeek = block.timestamp + 7 days;
-            lotteryWinnings = 0;
-        }
-
-        (uint256 reward, bool isLotteryWon) = calculateBNBReward(msg.sender);
-
-        if (isLotteryWon)
-            lotteryWinnings++;
+        uint256 reward = calculateBNBReward(msg.sender);
 
         // reward threshold
         if (reward >= rewardThreshold) {
@@ -1414,30 +1367,37 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
             uint256 initialBalance = address(this).balance;
 
             // now is to lock into staking pool
-            Utils.swapTokensForEth(address(pancakeRouter), tokenAmountToBeSwapped);
+            try Utils.swapTokensForEth(address(pancakeRouter), tokenAmountToBeSwapped) {
+                // how much BNB did we just swap into?
 
-            // how much BNB did we just swap into?
+                // capture the contract's current BNB balance.
+                // this is so that we can capture exactly the amount of BNB that the
+                // swap creates, and not make the liquidity event include any BNB that
+                // has been manually sent to the contract
+                uint256 deltaBalance = address(this).balance.sub(initialBalance);
 
-            // capture the contract's current BNB balance.
-            // this is so that we can capture exactly the amount of BNB that the
-            // swap creates, and not make the liquidity event include any BNB that
-            // has been manually sent to the contract
-            uint256 deltaBalance = address(this).balance.sub(initialBalance);
+                uint256 bnbToBeAddedToLiquidity = deltaBalance.div(3);
 
-            uint256 bnbToBeAddedToLiquidity = deltaBalance.div(3);
+                emit SwapAndLiquify(piece, deltaBalance, otherPiece);
 
-            // add liquidity to pancake
-            Utils.addLiquidity(address(pancakeRouter), owner(), otherPiece, bnbToBeAddedToLiquidity);
+                // add liquidity to pancake
+                try Utils.addLiquidity(address(pancakeRouter), owner(), otherPiece, bnbToBeAddedToLiquidity) {
 
-            emit SwapAndLiquify(piece, deltaBalance, otherPiece);
+                }
+                catch Error (string memory reason) {
+                    // if pancake throws error at us, just eat it as we want the transfer to succeed anyway
+                    emit ErrorHandled("swapAndLiquify:addLiquidity", reason);
+                }
+            }
+            catch Error (string memory reason) {
+                emit ErrorHandled("swapAndLiquify:swapTokensForEth", reason);
+            }
         }
     }
 
-    function activateContract() public onlyOwner {
+    function activateContract(uint256 _rewardCycleBlock) public onlyOwner {
         // reward claim
-        rewardCycleBlock = 7 days;
-
-        winningDoubleRewardPercentage = 5;
+        rewardCycleBlock = _rewardCycleBlock;
 
         // protocol
         disruptiveCoverageFee = 2 ether;
