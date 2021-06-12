@@ -883,8 +883,8 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = "Test";
-    string private _symbol = "TEST";
+    string private _name = "MoonKat";
+    string private _symbol = "MKAT";
     uint8 private _decimals = 9;
 
     IPancakeRouter02 public immutable pancakeRouter;
