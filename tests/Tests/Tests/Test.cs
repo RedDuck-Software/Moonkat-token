@@ -219,7 +219,7 @@ namespace Tests
             var amountToSend = await testContractService.MaxTxAmountQueryAsync() / 10;
 
             await testContractService.DisruptiveTransferRequestAndWaitForReceiptAsync(
-                new Contracts.Contracts.Test.ContractDefinition.DisruptiveTransferFunction
+                new DisruptiveTransferFunction
                 {
                     Amount = amountToSend,
                     Recipient = addressTo,

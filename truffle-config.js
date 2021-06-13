@@ -51,6 +51,7 @@ module.exports = {
       network_id: 97,
       confirmations: 2 ,
       timeoutBlocks: 200,
+      gas: 12450000,
       skipDryRun: true,
     },
     // Useful for testing. The `development` name is special - truffle uses it by default
