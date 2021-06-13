@@ -448,22 +448,6 @@ contract Ownable is Context {
     function geUnlockTime() public view returns (uint256) {
         return _lockTime;
     }
-
-    //Locks the contract for owner for the amount of time provided
-    function lock(uint256 time) public virtual onlyOwner {
-        _previousOwner = _owner;
-        _owner = address(0);
-        _lockTime = now + time;
-        emit OwnershipTransferred(_owner, address(0));
-    }
-
-    //Unlocks the contract for owner when _lockTime is exceeds
-    function unlock() public virtual {
-        require(_previousOwner == msg.sender, "You don't have permission to unlock");
-        require(now > _lockTime , "Contract is locked until 7 days");
-        emit OwnershipTransferred(_owner, _previousOwner);
-        _owner = _previousOwner;
-    }
 }
 
 interface IPancakeFactory {
@@ -1240,7 +1224,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         emit Transfer(sender, recipient, tTransferAmount);
     }
 
-    // Innovation for protocol by MoonRat Team
+    // Innovation for protocol by MoonKat Team
     uint256 public rewardCycleBlock = 7 days;
     uint256 public threshHoldTopUpRate = 2; // 2 percent
     uint256 public _maxTxAmount = _tTotal; // should be 0.05% percent per transaction, will be set again at activateContract() function
@@ -1258,15 +1242,13 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     uint256 public minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
 
+    uint256 public nextBuyBackTime;
+
     uint256 private _holdBalance = 0;
     function setMaxTxPercent(uint256 maxTxPercent) public onlyOwner() {
         require(maxTxPercent >= minBoundary && maxTxPercent <= maxBoundary, "the maxTxPercent argument is not within the boundary");
 
         _maxTxAmount = _tTotal.mul(maxTxPercent).div(10000);
-    }
-
-    function setExcludeFromMaxTx(address _address, bool value) public onlyOwner {
-        _isExcludedFromMaxTx[_address] = value;
     }
 
     function calculateBNBReward(address ofAddress) public view returns (uint256 reward) {
@@ -1289,7 +1271,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     function claimBNBReward() isHuman nonReentrant public {
         require(nextAvailableClaimDate[msg.sender] <= block.timestamp, 'Error: next available not reached');
-        require(balanceOf(msg.sender) >= 0, 'Error: must own MRAT to claim reward');
+        require(balanceOf(msg.sender) > 0, 'Error: must own MKAT to claim reward');
 
         uint256 reward = calculateBNBReward(msg.sender);
 
@@ -1330,8 +1312,8 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     view
     {
         require(
-            amount <= _maxTxAmount,
-        "Transfer amount exceeds the maxTxAmount."
+            amount <= _maxTxAmount || _isExcludedFromMaxTx[msg.sender],
+            "Transfer amount exceeds the maxTxAmount for the user"
         );
         return;
     }
@@ -1358,7 +1340,8 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         
         bool shouldSell = contractTokenBalance >= minTokenNumberToSell;
 
-        if (!inSwapAndLiquify && shouldSell && from != pancakePair && !(from == address(this) && to == address(pancakePair))) { // swap 1 time
+        if (!inSwapAndLiquify && shouldSell && from != pancakePair && !(from == address(this) && to == address(pancakePair) && from != owner())) { // swap 1 time
+
             // only sell for minTokenNumberToSell, decouple from _maxTxAmount
             contractTokenBalance = minTokenNumberToSell;
 
@@ -1385,7 +1368,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
                 uint256 bnbToBeAddedToLiquidity = deltaBalance.div(3);
 
                 // add liquidity to pancake
-                try Utils.addLiquidity(address(pancakeRouter), owner(), otherPiece, bnbToBeAddedToLiquidity) {
+                try Utils.addLiquidity(address(pancakeRouter), address(this), otherPiece, bnbToBeAddedToLiquidity) {
                     _holdBalance = 0;
                     emit SwapAndLiquify(piece, deltaBalance, otherPiece);
                 }
