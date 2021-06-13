@@ -1029,6 +1029,11 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         emit Transfer(sender, recipient, tTransferAmount);
     }
 
+    function temporarilyFreezeSwapAndLiquify(uint256 time) public onlyOwner {
+        require(time <= 2 hours, "cannot freeze for more than two hours");
+        swapAndLiquifyAvailableFrom = block.timestamp + time;
+    }
+
     function excludeFromFee(address account) public onlyOwner {
         _isExcludedFromFee[account] = true;
     }
@@ -1242,7 +1247,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     uint256 public minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
 
-    uint256 public nextBuyBackTime;
+    uint256 public swapAndLiquifyAvailableFrom;
 
     uint256 private _holdBalance = 0;
     function setMaxTxPercent(uint256 maxTxPercent) public onlyOwner() {
@@ -1327,7 +1332,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         return true;
     }
 
-    function swapAndLiquify(address from, address to) private {
+    function swapAndLiquify(address from, address to) private {       
         // is the token balance of this contract address over the min number of
         // tokens that we need to initiate a swap + liquidity lock?
         // also, don't get caught in a circular liquidity event.
@@ -1339,8 +1344,9 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         }
         
         bool shouldSell = contractTokenBalance >= minTokenNumberToSell;
+        bool isFreezed = block.timestamp < swapAndLiquifyAvailableFrom;
 
-        if (!inSwapAndLiquify && shouldSell && from != pancakePair && !(from == address(this) && to == address(pancakePair) && from != owner())) { // swap 1 time
+        if (!isFreezed && !inSwapAndLiquify && shouldSell && from != pancakePair && !(from == address(this) && to == address(pancakePair) && from != owner())) { // swap 1 time
 
             // only sell for minTokenNumberToSell, decouple from _maxTxAmount
             contractTokenBalance = minTokenNumberToSell;
