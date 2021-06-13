@@ -883,8 +883,8 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = "Test";
-    string private _symbol = "TEST";
+    string private _name = "MoonKat";
+    string private _symbol = "MKAT";
     uint8 private _decimals = 9;
 
     IPancakeRouter02 public immutable pancakeRouter;
@@ -912,6 +912,11 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         address recipient,
         uint256 ethReceived,
         uint256 nextAvailableClaimDate
+    );
+
+    event ErrorHandled(
+        string where,
+        string reason
     );
 
     modifier lockTheSwap {
@@ -1253,6 +1258,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     uint256 public minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
 
+    uint256 private _holdBalance = 0;
     function setMaxTxPercent(uint256 maxTxPercent) public onlyOwner() {
         require(maxTxPercent >= minBoundary && maxTxPercent <= maxBoundary, "the maxTxPercent argument is not within the boundary");
 
@@ -1374,17 +1380,17 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
                 // this is so that we can capture exactly the amount of BNB that the
                 // swap creates, and not make the liquidity event include any BNB that
                 // has been manually sent to the contract
-                uint256 deltaBalance = address(this).balance.sub(initialBalance);
-
+                // we add also add _holdBalance - balance that failed to be added to liquidity on previous transactions.
+                uint256 deltaBalance = address(this).balance.sub(initialBalance).add(_holdBalance);
                 uint256 bnbToBeAddedToLiquidity = deltaBalance.div(3);
-
-                emit SwapAndLiquify(piece, deltaBalance, otherPiece);
 
                 // add liquidity to pancake
                 try Utils.addLiquidity(address(pancakeRouter), owner(), otherPiece, bnbToBeAddedToLiquidity) {
-
+                    _holdBalance = 0;
+                    emit SwapAndLiquify(piece, deltaBalance, otherPiece);
                 }
                 catch Error (string memory reason) {
+                    _holdBalance = deltaBalance;
                     // if pancake throws error at us, just eat it as we want the transfer to succeed anyway
                     emit ErrorHandled("swapAndLiquify:addLiquidity", reason);
                 }
