@@ -1,11 +1,10 @@
 ﻿using Contracts.Contracts.Test;
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
+using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Numerics;
-using System.Text;
 using System.Threading.Tasks;
 using Tests.DTOs;
 using Xunit.Abstractions;
@@ -14,8 +13,6 @@ namespace Tests
 {
     public abstract class TestBase
     {
-        private long _blockToReset = 9_000_000;
-
         protected readonly ITestOutputHelper output;
 
         protected string SwapRouterAddress => "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
@@ -26,21 +23,28 @@ namespace Tests
             new("0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a")
         };
 
+        private long _blockToReset = 12_000_000;
+
+        private Secrets _appSecrets;
+
+
         public TestBase(ITestOutputHelper output)
         {
             this.output = output;
+            _appSecrets = ReadAppSecrets();
         }
+
 
         protected async Task ResetNode(Web3 web3)
         {
-            await new HardhatReset(web3.Client).SendRequestAsync(new() { Forking = new() { BlockNumber = _blockToReset, JsonRpcUrl = DeploymentService.PrivateLocalNetworkUrl } });
+            await new HardhatReset(web3.Client).SendRequestAsync(new() { Forking = new() { BlockNumber = _blockToReset, JsonRpcUrl = DeploymentService.GetAlchemyUrl(_appSecrets.AlchemyApiKey) } });
         }
 
         protected async Task<TestService> DeployMoonkatConract(DeploymentService deplService)
         {
             var testContractService = await deplService.ContractHelper.DeployTestContract(SwapRouterAddress);
 
-            await testContractService.ActivateContractRequestAndWaitForReceiptAsync();
+            await testContractService.ActivateContractRequestAndWaitForReceiptAsync(7);
 
             output.WriteLine($"Contract deployed to: {testContractService.ContractHandler.ContractAddress}");
 
@@ -62,5 +66,12 @@ namespace Tests
             return (totalSupply, balanceSender, balanceReceiver);
         }
 
+
+        private Secrets ReadAppSecrets()
+        {
+            string filePath = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "\\secrets.json";
+
+            return JsonConvert.DeserializeObject<Secrets>(File.ReadAllText(filePath));
+        }
     }
 }

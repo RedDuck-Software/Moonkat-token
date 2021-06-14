@@ -1,11 +1,9 @@
 using Contracts.Contracts.IPancakePair;
 using Contracts.Contracts.IPancakeRouter02;
 using Contracts.Contracts.Test.ContractDefinition;
-using Nethereum.Contracts.Extensions;
 using Nethereum.Hex.HexTypes;
 using System;
 using System.Threading.Tasks;
-using Tests.DTOs.Events;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -20,6 +18,8 @@ namespace Tests
         {
             var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
 
+            await ResetNode(deplSerivice.Web3);
+
             await DeployMoonkatConract(deplSerivice);
         }
 
@@ -27,6 +27,9 @@ namespace Tests
         public async Task transfer_from_owner_without_fee()
         {
             var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
+
+            await ResetNode(deplSerivice.Web3);
+
 
             var testContractService = await DeployMoonkatConract(deplSerivice);
 
@@ -53,6 +56,9 @@ namespace Tests
         public async Task transfer_from_address_to_address_with_6pocentage_fee()
         {
             var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
+
+            await ResetNode(deplSerivice.Web3);
+
 
             var testContractService = await DeployMoonkatConract(deplSerivice);
 
@@ -103,6 +109,9 @@ namespace Tests
         public async Task transfer_with_6percent_fee_and_check_liquidity()
         {
             var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
+
+            await ResetNode(deplSerivice.Web3);
+
 
             var testContractService = await DeployMoonkatConract(deplSerivice);
 
@@ -174,6 +183,9 @@ namespace Tests
         {
             var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
 
+            await ResetNode(deplSerivice.Web3);
+
+
             var testContractService = await DeployMoonkatConract(deplSerivice);
 
             var addressFrom = deplSerivice.Account.Address;
@@ -207,6 +219,8 @@ namespace Tests
         public async Task claim_bnb_reward()
         {
             var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
+
+            await ResetNode(deplSerivice.Web3);
 
             var testContractService = await DeployMoonkatConract(deplSerivice);
 

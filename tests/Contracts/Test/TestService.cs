@@ -80,19 +80,25 @@ namespace Contracts.Contracts.Test
              return ContractHandler.SendRequestAsync(activateContractFunction);
         }
 
-        public Task<string> ActivateContractRequestAsync()
-        {
-             return ContractHandler.SendRequestAsync<ActivateContractFunction>();
-        }
-
         public Task<TransactionReceipt> ActivateContractRequestAndWaitForReceiptAsync(ActivateContractFunction activateContractFunction, CancellationTokenSource cancellationToken = null)
         {
              return ContractHandler.SendRequestAndWaitForReceiptAsync(activateContractFunction, cancellationToken);
         }
 
-        public Task<TransactionReceipt> ActivateContractRequestAndWaitForReceiptAsync(CancellationTokenSource cancellationToken = null)
+        public Task<string> ActivateContractRequestAsync(BigInteger rewardCycleBlock)
         {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync<ActivateContractFunction>(null, cancellationToken);
+            var activateContractFunction = new ActivateContractFunction();
+                activateContractFunction.RewardCycleBlock = rewardCycleBlock;
+            
+             return ContractHandler.SendRequestAsync(activateContractFunction);
+        }
+
+        public Task<TransactionReceipt> ActivateContractRequestAndWaitForReceiptAsync(BigInteger rewardCycleBlock, CancellationTokenSource cancellationToken = null)
+        {
+            var activateContractFunction = new ActivateContractFunction();
+                activateContractFunction.RewardCycleBlock = rewardCycleBlock;
+            
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(activateContractFunction, cancellationToken);
         }
 
         public Task<BigInteger> AllowanceQueryAsync(AllowanceFunction allowanceFunction, BlockParameter blockParameter = null)
@@ -152,17 +158,18 @@ namespace Contracts.Contracts.Test
             return ContractHandler.QueryAsync<BalanceOfFunction, BigInteger>(balanceOfFunction, blockParameter);
         }
 
-        public Task<CalculateBNBRewardOutputDTO> CalculateBNBRewardQueryAsync(CalculateBNBRewardFunction calculateBNBRewardFunction, BlockParameter blockParameter = null)
+        public Task<BigInteger> CalculateBNBRewardQueryAsync(CalculateBNBRewardFunction calculateBNBRewardFunction, BlockParameter blockParameter = null)
         {
-            return ContractHandler.QueryDeserializingToObjectAsync<CalculateBNBRewardFunction, CalculateBNBRewardOutputDTO>(calculateBNBRewardFunction, blockParameter);
+            return ContractHandler.QueryAsync<CalculateBNBRewardFunction, BigInteger>(calculateBNBRewardFunction, blockParameter);
         }
 
-        public Task<CalculateBNBRewardOutputDTO> CalculateBNBRewardQueryAsync(string ofAddress, BlockParameter blockParameter = null)
+        
+        public Task<BigInteger> CalculateBNBRewardQueryAsync(string ofAddress, BlockParameter blockParameter = null)
         {
             var calculateBNBRewardFunction = new CalculateBNBRewardFunction();
                 calculateBNBRewardFunction.OfAddress = ofAddress;
             
-            return ContractHandler.QueryDeserializingToObjectAsync<CalculateBNBRewardFunction, CalculateBNBRewardOutputDTO>(calculateBNBRewardFunction, blockParameter);
+            return ContractHandler.QueryAsync<CalculateBNBRewardFunction, BigInteger>(calculateBNBRewardFunction, blockParameter);
         }
 
         public Task<string> ClaimBNBRewardRequestAsync(ClaimBNBRewardFunction claimBNBRewardFunction)
@@ -430,43 +437,6 @@ namespace Contracts.Contracts.Test
             return ContractHandler.QueryAsync<IsExcludedFromRewardFunction, bool>(isExcludedFromRewardFunction, blockParameter);
         }
 
-        public Task<string> LockRequestAsync(LockFunction @lockFunction)
-        {
-             return ContractHandler.SendRequestAsync(@lockFunction);
-        }
-
-        public Task<TransactionReceipt> LockRequestAndWaitForReceiptAsync(LockFunction @lockFunction, CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(@lockFunction, cancellationToken);
-        }
-
-        public Task<string> LockRequestAsync(BigInteger time)
-        {
-            var @lockFunction = new LockFunction();
-                @lockFunction.Time = time;
-            
-             return ContractHandler.SendRequestAsync(@lockFunction);
-        }
-
-        public Task<TransactionReceipt> LockRequestAndWaitForReceiptAsync(BigInteger time, CancellationTokenSource cancellationToken = null)
-        {
-            var @lockFunction = new LockFunction();
-                @lockFunction.Time = time;
-            
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(@lockFunction, cancellationToken);
-        }
-
-        public Task<BigInteger> LotteryWinningsQueryAsync(LotteryWinningsFunction lotteryWinningsFunction, BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<LotteryWinningsFunction, BigInteger>(lotteryWinningsFunction, blockParameter);
-        }
-
-        
-        public Task<BigInteger> LotteryWinningsQueryAsync(BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<LotteryWinningsFunction, BigInteger>(null, blockParameter);
-        }
-
         public Task<BigInteger> MinTokenNumberToSellQueryAsync(MinTokenNumberToSellFunction minTokenNumberToSellFunction, BlockParameter blockParameter = null)
         {
             return ContractHandler.QueryAsync<MinTokenNumberToSellFunction, BigInteger>(minTokenNumberToSellFunction, blockParameter);
@@ -501,17 +471,6 @@ namespace Contracts.Contracts.Test
                 nextAvailableClaimDateFunction.ReturnValue1 = returnValue1;
             
             return ContractHandler.QueryAsync<NextAvailableClaimDateFunction, BigInteger>(nextAvailableClaimDateFunction, blockParameter);
-        }
-
-        public Task<BigInteger> NextWeekQueryAsync(NextWeekFunction nextWeekFunction, BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<NextWeekFunction, BigInteger>(nextWeekFunction, blockParameter);
-        }
-
-        
-        public Task<BigInteger> NextWeekQueryAsync(BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<NextWeekFunction, BigInteger>(null, blockParameter);
         }
 
         public Task<string> OwnerQueryAsync(OwnerFunction ownerFunction, BlockParameter blockParameter = null)
@@ -604,34 +563,6 @@ namespace Contracts.Contracts.Test
             return ContractHandler.QueryAsync<RewardThresholdFunction, BigInteger>(null, blockParameter);
         }
 
-        public Task<string> SetExcludeFromMaxTxRequestAsync(SetExcludeFromMaxTxFunction setExcludeFromMaxTxFunction)
-        {
-             return ContractHandler.SendRequestAsync(setExcludeFromMaxTxFunction);
-        }
-
-        public Task<TransactionReceipt> SetExcludeFromMaxTxRequestAndWaitForReceiptAsync(SetExcludeFromMaxTxFunction setExcludeFromMaxTxFunction, CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(setExcludeFromMaxTxFunction, cancellationToken);
-        }
-
-        public Task<string> SetExcludeFromMaxTxRequestAsync(string address, bool value)
-        {
-            var setExcludeFromMaxTxFunction = new SetExcludeFromMaxTxFunction();
-                setExcludeFromMaxTxFunction.Address = address;
-                setExcludeFromMaxTxFunction.Value = value;
-            
-             return ContractHandler.SendRequestAsync(setExcludeFromMaxTxFunction);
-        }
-
-        public Task<TransactionReceipt> SetExcludeFromMaxTxRequestAndWaitForReceiptAsync(string address, bool value, CancellationTokenSource cancellationToken = null)
-        {
-            var setExcludeFromMaxTxFunction = new SetExcludeFromMaxTxFunction();
-                setExcludeFromMaxTxFunction.Address = address;
-                setExcludeFromMaxTxFunction.Value = value;
-            
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(setExcludeFromMaxTxFunction, cancellationToken);
-        }
-
         public Task<string> SetLiquidityFeePercentRequestAsync(SetLiquidityFeePercentFunction setLiquidityFeePercentFunction)
         {
              return ContractHandler.SendRequestAsync(setLiquidityFeePercentFunction);
@@ -710,6 +641,17 @@ namespace Contracts.Contracts.Test
              return ContractHandler.SendRequestAndWaitForReceiptAsync(setTaxFeePercentFunction, cancellationToken);
         }
 
+        public Task<BigInteger> SwapAndLiquifyAvailableFromQueryAsync(SwapAndLiquifyAvailableFromFunction swapAndLiquifyAvailableFromFunction, BlockParameter blockParameter = null)
+        {
+            return ContractHandler.QueryAsync<SwapAndLiquifyAvailableFromFunction, BigInteger>(swapAndLiquifyAvailableFromFunction, blockParameter);
+        }
+
+        
+        public Task<BigInteger> SwapAndLiquifyAvailableFromQueryAsync(BlockParameter blockParameter = null)
+        {
+            return ContractHandler.QueryAsync<SwapAndLiquifyAvailableFromFunction, BigInteger>(null, blockParameter);
+        }
+
         public Task<string> SymbolQueryAsync(SymbolFunction symbolFunction, BlockParameter blockParameter = null)
         {
             return ContractHandler.QueryAsync<SymbolFunction, string>(symbolFunction, blockParameter);
@@ -719,6 +661,32 @@ namespace Contracts.Contracts.Test
         public Task<string> SymbolQueryAsync(BlockParameter blockParameter = null)
         {
             return ContractHandler.QueryAsync<SymbolFunction, string>(null, blockParameter);
+        }
+
+        public Task<string> TemporarilyFreezeSwapAndLiquifyRequestAsync(TemporarilyFreezeSwapAndLiquifyFunction temporarilyFreezeSwapAndLiquifyFunction)
+        {
+             return ContractHandler.SendRequestAsync(temporarilyFreezeSwapAndLiquifyFunction);
+        }
+
+        public Task<TransactionReceipt> TemporarilyFreezeSwapAndLiquifyRequestAndWaitForReceiptAsync(TemporarilyFreezeSwapAndLiquifyFunction temporarilyFreezeSwapAndLiquifyFunction, CancellationTokenSource cancellationToken = null)
+        {
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(temporarilyFreezeSwapAndLiquifyFunction, cancellationToken);
+        }
+
+        public Task<string> TemporarilyFreezeSwapAndLiquifyRequestAsync(BigInteger time)
+        {
+            var temporarilyFreezeSwapAndLiquifyFunction = new TemporarilyFreezeSwapAndLiquifyFunction();
+                temporarilyFreezeSwapAndLiquifyFunction.Time = time;
+            
+             return ContractHandler.SendRequestAsync(temporarilyFreezeSwapAndLiquifyFunction);
+        }
+
+        public Task<TransactionReceipt> TemporarilyFreezeSwapAndLiquifyRequestAndWaitForReceiptAsync(BigInteger time, CancellationTokenSource cancellationToken = null)
+        {
+            var temporarilyFreezeSwapAndLiquifyFunction = new TemporarilyFreezeSwapAndLiquifyFunction();
+                temporarilyFreezeSwapAndLiquifyFunction.Time = time;
+            
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(temporarilyFreezeSwapAndLiquifyFunction, cancellationToken);
         }
 
         public Task<BigInteger> ThreshHoldTopUpRateQueryAsync(ThreshHoldTopUpRateFunction threshHoldTopUpRateFunction, BlockParameter blockParameter = null)
@@ -850,37 +818,6 @@ namespace Contracts.Contracts.Test
                 transferOwnershipFunction.NewOwner = newOwner;
             
              return ContractHandler.SendRequestAndWaitForReceiptAsync(transferOwnershipFunction, cancellationToken);
-        }
-
-        public Task<string> UnlockRequestAsync(UnlockFunction unlockFunction)
-        {
-             return ContractHandler.SendRequestAsync(unlockFunction);
-        }
-
-        public Task<string> UnlockRequestAsync()
-        {
-             return ContractHandler.SendRequestAsync<UnlockFunction>();
-        }
-
-        public Task<TransactionReceipt> UnlockRequestAndWaitForReceiptAsync(UnlockFunction unlockFunction, CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(unlockFunction, cancellationToken);
-        }
-
-        public Task<TransactionReceipt> UnlockRequestAndWaitForReceiptAsync(CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync<UnlockFunction>(null, cancellationToken);
-        }
-
-        public Task<BigInteger> WinningDoubleRewardPercentageQueryAsync(WinningDoubleRewardPercentageFunction winningDoubleRewardPercentageFunction, BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<WinningDoubleRewardPercentageFunction, BigInteger>(winningDoubleRewardPercentageFunction, blockParameter);
-        }
-
-        
-        public Task<BigInteger> WinningDoubleRewardPercentageQueryAsync(BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<WinningDoubleRewardPercentageFunction, BigInteger>(null, blockParameter);
         }
     }
 }

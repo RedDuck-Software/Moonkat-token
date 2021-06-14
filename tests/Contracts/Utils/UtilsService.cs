@@ -42,21 +42,20 @@ namespace Contracts.Contracts.Utils
             ContractHandler = web3.Eth.GetContractHandler(contractAddress);
         }
 
-        public Task<CalculateBNBRewardOutputDTO> CalculateBNBRewardQueryAsync(CalculateBNBRewardFunction calculateBNBRewardFunction, BlockParameter blockParameter = null)
+        public Task<BigInteger> CalculateBNBRewardQueryAsync(CalculateBNBRewardFunction calculateBNBRewardFunction, BlockParameter blockParameter = null)
         {
-            return ContractHandler.QueryDeserializingToObjectAsync<CalculateBNBRewardFunction, CalculateBNBRewardOutputDTO>(calculateBNBRewardFunction, blockParameter);
+            return ContractHandler.QueryAsync<CalculateBNBRewardFunction, BigInteger>(calculateBNBRewardFunction, blockParameter);
         }
 
-        public Task<CalculateBNBRewardOutputDTO> CalculateBNBRewardQueryAsync(BigInteger currentBalance, BigInteger currentBNBPool, BigInteger winningDoubleRewardPercentage, BigInteger totalSupply, BigInteger lotteryWinnings, BlockParameter blockParameter = null)
+        
+        public Task<BigInteger> CalculateBNBRewardQueryAsync(BigInteger currentBalance, BigInteger currentBNBPool, BigInteger totalSupply, BlockParameter blockParameter = null)
         {
             var calculateBNBRewardFunction = new CalculateBNBRewardFunction();
                 calculateBNBRewardFunction.CurrentBalance = currentBalance;
                 calculateBNBRewardFunction.CurrentBNBPool = currentBNBPool;
-                calculateBNBRewardFunction.WinningDoubleRewardPercentage = winningDoubleRewardPercentage;
                 calculateBNBRewardFunction.TotalSupply = totalSupply;
-                calculateBNBRewardFunction.LotteryWinnings = lotteryWinnings;
             
-            return ContractHandler.QueryDeserializingToObjectAsync<CalculateBNBRewardFunction, CalculateBNBRewardOutputDTO>(calculateBNBRewardFunction, blockParameter);
+            return ContractHandler.QueryAsync<CalculateBNBRewardFunction, BigInteger>(calculateBNBRewardFunction, blockParameter);
         }
 
         public Task<BigInteger> CalculateTopUpClaimQueryAsync(CalculateTopUpClaimFunction calculateTopUpClaimFunction, BlockParameter blockParameter = null)

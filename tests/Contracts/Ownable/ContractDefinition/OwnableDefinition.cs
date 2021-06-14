@@ -36,15 +36,6 @@ namespace Contracts.Contracts.Ownable.ContractDefinition
 
     }
 
-    public partial class LockFunction : LockFunctionBase { }
-
-    [Function("lock")]
-    public class LockFunctionBase : FunctionMessage
-    {
-        [Parameter("uint256", "time", 1)]
-        public virtual BigInteger Time { get; set; }
-    }
-
     public partial class OwnerFunction : OwnerFunctionBase { }
 
     [Function("owner", "address")]
@@ -70,14 +61,6 @@ namespace Contracts.Contracts.Ownable.ContractDefinition
         public virtual string NewOwner { get; set; }
     }
 
-    public partial class UnlockFunction : UnlockFunctionBase { }
-
-    [Function("unlock")]
-    public class UnlockFunctionBase : FunctionMessage
-    {
-
-    }
-
     public partial class OwnershipTransferredEventDTO : OwnershipTransferredEventDTOBase { }
 
     [Event("OwnershipTransferred")]
@@ -98,8 +81,6 @@ namespace Contracts.Contracts.Ownable.ContractDefinition
         public virtual BigInteger ReturnValue1 { get; set; }
     }
 
-
-
     public partial class OwnerOutputDTO : OwnerOutputDTOBase { }
 
     [FunctionOutput]
@@ -108,8 +89,6 @@ namespace Contracts.Contracts.Ownable.ContractDefinition
         [Parameter("address", "", 1)]
         public virtual string ReturnValue1 { get; set; }
     }
-
-
 
 
 

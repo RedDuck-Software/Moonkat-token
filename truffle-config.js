@@ -24,6 +24,7 @@
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
 const HDWalletProvider = require("@truffle/hdwallet-provider");
+//const web3 = require('web3');
 
 let config = require("./secrets.json");
 
@@ -42,6 +43,16 @@ module.exports = {
    */
 
   networks: {
+    mainnet: {
+      provider: () =>
+        new HDWalletProvider(
+          config.mnemonic,
+          `https://bsc-dataseed.binance.org/`
+        ),
+      network_id: 56,
+      gasPrice: 8000000000 // 8 gwei (0,000000008 ETH)
+    },
+
     testnet: {
       provider: () =>
         new HDWalletProvider(
@@ -52,7 +63,7 @@ module.exports = {
       confirmations: 2 ,
       timeoutBlocks: 200,
       gas: 12450000,
-      skipDryRun: true,
+      skipDryRun: true
     },
     // Useful for testing. The `development` name is special - truffle uses it by default
     // if it's defined here and no other network is specified at the command line.
