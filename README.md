@@ -3,8 +3,11 @@
 1. Run ```npm i``` to install all dependencies
 2. Install truffle globally ```npm install -g truffle```
 3. Compile you contracts using ```truffle compile```
-4. Deploy your contracts 
+4. Change ```SwapRouterAddress``` in ```1_migration.js``` file (migration folder)
+5. Deploy your contracts
+    ```truffle migrate --network [network] --reset```
 
+Possible \[network\] values you can find in ```truffle-config.js``` file
 
 # HOW TO RUN TESTS
 
