@@ -19,10 +19,14 @@ contract PreSale {
 
     address payable moneyTransferTo;
 
-    uint256 public minBNBAmount = 2 * 10**17; // 0.2 ether
-    uint256 public maxBNBAmount = 3 ether;
+    uint256 constant public minBNBAmount = 2 * 10**17; // 0.2 ether
 
-    uint256 public oneTokenPriceInBNB = 1333333333000;
+    uint256 constant public maxBNBAmount = 3 ether;
+
+    uint256 constant public oneTokenPriceInBNB = 1333333333000;
+
+    uint256 constant public monthDuration = 30 days;
+
 
     uint256 public reservedTokens;
 
@@ -36,7 +40,6 @@ contract PreSale {
     bool public secondPaymentSucceed;
     bool public thirdPaymentSucceed;
 
-    uint256 public monthDuration = 30 days;
 
     modifier onlyInActive() {
         require(!_isSalePeriodEnd(), "Sale is not active");
@@ -169,7 +172,7 @@ contract PreSale {
 
     function calculateTokenAmount(uint256 _bnbAmount)
         public
-        view
+        pure
         returns (uint256)
     {
         return _calculateTokenAmount(_bnbAmount);
@@ -187,7 +190,7 @@ contract PreSale {
 
     function _calculateTokenAmount(uint256 _bnbAmount)
         private
-        view
+        pure
         returns (uint256)
     {
         return _bnbAmount.div(oneTokenPriceInBNB);

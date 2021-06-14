@@ -883,7 +883,13 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 constant maxBoundary = 10; // 0.1%
     uint256 constant minBoundary = 1; // 0.01%
 
-    
+    uint256 constant initLiquidityDisactivatePeriod = 1 seconds;
+
+    uint256 public initLiquidityDisactivatedTime;
+
+    address[] public blacklist;
+
+
     bool inSwapAndLiquify = false;
 
     event SwapAndLiquify(
@@ -902,6 +908,11 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         string where,
         string reason
     );
+
+    event AddressBlacklisted(
+        address addr
+    );
+
 
     modifier lockTheSwap {
         inSwapAndLiquify = true;
@@ -1158,6 +1169,15 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         require(to != address(0), "BEP20: transfer to the zero address");
         require(amount > 0, "Transfer amount must be greater than zero");
 
+        require(!_containsInAddressList(from, blacklist) , "Address {from} is blacklisted");
+        require(!_containsInAddressList(to, blacklist), "Address {to} is blacklisted");
+
+        if(initLiquidityDisactivatedTime + initLiquidityDisactivatePeriod  > block.timestamp &&  from == address(pancakePair)) { // бан дурачку 
+            blacklist.push(address(to));
+            emit AddressBlacklisted(to);
+            return;
+        }
+
         ensureMaxTxAmount(amount);
 
         // swap and liquify
@@ -1268,6 +1288,11 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
             address(this).balance,
             _totalSupply
         );
+    }
+
+    function addInitialLiquidity(uint256 _tokenAmount, uint256 _ethAmount) private { 
+        Utils.addLiquidity(address(pancakeRouter), owner(), _tokenAmount, _ethAmount);
+        initLiquidityDisactivatedTime = block.timestamp; 
     }
 
     function getRewardCycleBlock() public view returns (uint256) {
@@ -1388,6 +1413,12 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
                 emit ErrorHandled("swapAndLiquify:swapTokensForEth", reason);
             }
         }
+    }
+
+    function _containsInAddressList(address addr, address[] memory arr) private pure returns (bool){ 
+        for (uint256 i; i < arr.length; i++)
+            if(arr[i] == addr) return true;
+        return false;
     }
 
     function activateContract(uint256 _rewardCycleBlock) public onlyOwner {
