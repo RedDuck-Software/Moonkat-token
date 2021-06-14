@@ -843,7 +843,7 @@ pragma experimental ABIEncoderV2;
 
 
 
-contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
+contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     using Address for address;
 
@@ -1177,7 +1177,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         if(transferActivatedFrom == 0 && to == address(pancakePair)) {
               transferActivatedFrom = block.timestamp + 5 seconds;
         }// is it a transaction of selling MKAT from pancakeswap within a second after the tx of adding liquidity  
-        else if(transferActivatedFrom != 0 && transferActivatedFrom < block.timestamp && from == address(pancakePair)) {
+        else if(transferActivatedFrom != 0 && transferActivatedFrom > block.timestamp && from == address(pancakePair)) {
              blacklist[address(to)] = true; // ban the snipping guy
              emit AddressBlacklisted(to);
         }
