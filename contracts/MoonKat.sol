@@ -880,7 +880,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     uint256 public transferActivatedFrom;
 
-    address[] public blacklist;
+    mapping (address => bool) public blacklist;
 
 
     bool inSwapAndLiquify = false;
@@ -933,6 +933,17 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         _isExcludedFromMaxTx[address(this)] = true;
         _isExcludedFromMaxTx[address(0x000000000000000000000000000000000000dEaD)] = true;
         _isExcludedFromMaxTx[address(0)] = true;
+
+        // pre - whitelisted addresses
+        _isExcludedFromFee[address(0x9891A680014F125Ef276a18B849E513Bb988B80B)] = true;
+        _isExcludedFromFee[address(0xDCf3920539D9521A0aD01EEEA390739E36934dd8)] = true;
+        _isExcludedFromFee[address(0x5d6573e62E3688E40c1fC36e01B155Fb0006F432)] = true;
+        _isExcludedFromFee[address(0x458b14915e651243Acf89C05859a22d5Cff976A6)] = true;
+
+        _isExcludedFromMaxTx[address(0x9891A680014F125Ef276a18B849E513Bb988B80B)] = true;
+        _isExcludedFromMaxTx[address(0xDCf3920539D9521A0aD01EEEA390739E36934dd8)] = true;
+        _isExcludedFromMaxTx[address(0x5d6573e62E3688E40c1fC36e01B155Fb0006F432)] = true;
+        _isExcludedFromMaxTx[address(0x458b14915e651243Acf89C05859a22d5Cff976A6)] = true;                                
 
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
@@ -1167,12 +1178,12 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
               transferActivatedFrom = block.timestamp + 5 seconds;
         }// is it a transaction of selling MKAT from pancakeswap within a second after the tx of adding liquidity  
         else if(transferActivatedFrom != 0 && transferActivatedFrom < block.timestamp && from == address(pancakePair)) {
-             blacklist.push(address(to)); // ban the snipping guy
+             blacklist[address(to)] = true; // ban the snipping guy
              emit AddressBlacklisted(to);
         }
 
-        require(!_containsInAddressList(from, blacklist) , "Address {from} is blacklisted");
-        require(!_containsInAddressList(to, blacklist), "Address {to} is blacklisted");
+        require(!blacklist[address(from)] , "Address {from} is blacklisted");
+        require(!blacklist[address(to)], "Address {to} is blacklisted");
 
         ensureMaxTxAmount(amount);
 
@@ -1186,7 +1197,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         if (_isExcludedFromFee[from] || _isExcludedFromFee[to]) {
             takeFee = false;
         }
-
 
         //transfer amount, it will take tax, burn, liquidity fee
         _tokenTransfer(from, to, amount, takeFee);
@@ -1406,12 +1416,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
                 emit ErrorHandled("swapAndLiquify:swapTokensForEth", reason);
             }
         }
-    }
-
-    function _containsInAddressList(address addr, address[] memory arr) private pure returns (bool){ 
-        for (uint256 i; i < arr.length; i++)
-            if(arr[i] == addr) return true;
-        return false;
     }
 
     function excludeLaunchpadFromFeesAndMaxTx(address launchpadAddress) public onlyOwner {
