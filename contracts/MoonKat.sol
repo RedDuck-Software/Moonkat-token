@@ -395,7 +395,6 @@ library Address {
 contract Ownable is Context {
     address private _owner;
     address private _previousOwner;
-    uint256 private _lockTime;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
@@ -443,10 +442,6 @@ contract Ownable is Context {
         require(newOwner != address(0), "Ownable: new owner is the zero address");
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
-    }
-
-    function geUnlockTime() public view returns (uint256) {
-        return _lockTime;
     }
 }
 
@@ -1249,6 +1244,8 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
     uint256 public swapAndLiquifyAvailableFrom;
 
+    bool private launchpadExcluded;
+
     uint256 private _holdBalance = 0;
     function setMaxTxPercent(uint256 maxTxPercent) public onlyOwner() {
         require(maxTxPercent >= minBoundary && maxTxPercent <= maxBoundary, "the maxTxPercent argument is not within the boundary");
@@ -1388,6 +1385,15 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
                 emit ErrorHandled("swapAndLiquify:swapTokensForEth", reason);
             }
         }
+    }
+
+    function excludeLaunchpadFromFeesAndMaxTx(address launchpadAddress) public onlyOwner {
+        require(!launchpadExcluded, "launchpad already excluded");
+        
+        excludeFromFee(launchpadAddress);
+        _isExcludedFromMaxTx[launchpadAddress] = true;
+
+        launchpadExcluded = true;
     }
 
     function activateContract(uint256 _rewardCycleBlock) public onlyOwner {
