@@ -1165,7 +1165,10 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         require(!_containsInAddressList(from, blacklist) , "Address {from} is blacklisted");
         require(!_containsInAddressList(to, blacklist), "Address {to} is blacklisted");
 
-        if(transferActivatedFrom > block.timestamp &&  from == address(pancakePair)) {
+
+        if(transferActivatedFrom == 0 && to == address(pancakePair)) {
+             transferActivatedFrom = block.timestamp + 1 seconds;
+        }else if(transferActivatedFrom != 0 && from == address(pancakePair)) {
             blacklist.push(address(to));
             emit AddressBlacklisted(to);
             return;
@@ -1285,10 +1288,6 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         );
     }
 
-    function _addInitialLiquidity(uint256 _tokenAmount, uint256 _ethAmount) private { 
-        Utils.addLiquidity(address(pancakeRouter), owner(), _tokenAmount, _ethAmount);
-        transferActivatedFrom = block.timestamp + 1 seconds;
-    }
 
     function getRewardCycleBlock() public view returns (uint256) {
         return rewardCycleBlock;
@@ -1436,7 +1435,5 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
         // approve contract
         _approve(address(this), address(pancakeRouter), 2 ** 256 - 1);
-
-        _addInitialLiquidity(_initLiquidityTokenAmount, _initLiquidityBnbAmount);
     }
 }
