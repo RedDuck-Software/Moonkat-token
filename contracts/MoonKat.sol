@@ -1168,7 +1168,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
         if(transferActivatedFrom == 0 && to == address(pancakePair)) {
              transferActivatedFrom = block.timestamp + 1 seconds;
-        }else if(transferActivatedFrom != 0 && from == address(pancakePair)) {
+        }else if(transferActivatedFrom != 0 && transferActivatedFrom < block.timestamp && from == address(pancakePair)) {
             blacklist.push(address(to));
             emit AddressBlacklisted(to);
             return;
