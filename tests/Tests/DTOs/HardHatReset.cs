@@ -31,9 +31,19 @@ namespace Tests.DTOs
             return base.SendRequestAsync(id, input);
         }
 
+        public Task<bool> SendRequestAsync(object id = null)
+        {
+            return base.SendRequestAsync(id);
+        }
+
         public RpcRequest BuildRequest(HardhatResetInput input, object id = null)
         {
             return base.BuildRequest(id, input);
+        }
+
+        public RpcRequest BuildRequest(object id = null)
+        {
+            return base.BuildRequest(id);
         }
     }
 }

@@ -12,6 +12,7 @@ namespace Tests
 
         public static string PublicTestNodeUrl { get; set; } = "https://data-seed-prebsc-1-s1.binance.org:8545/";
 
+        public static string GetAlchemyUrl(string privateKey) => $@"https://eth-mainnet.alchemyapi.io/v2/{privateKey}";
         
         public ContractHelper ContractHelper { get; set; }
 
