@@ -883,9 +883,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 constant maxBoundary = 10; // 0.1%
     uint256 constant minBoundary = 1; // 0.01%
 
-    uint256 constant initLiquidityDisactivatePeriod = 1 seconds;
-
-    uint256 public initLiquidityDisactivatedTime;
+    uint256 public transferActivatedFrom;
 
     address[] public blacklist;
 
@@ -1172,7 +1170,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         require(!_containsInAddressList(from, blacklist) , "Address {from} is blacklisted");
         require(!_containsInAddressList(to, blacklist), "Address {to} is blacklisted");
 
-        if(initLiquidityDisactivatedTime + initLiquidityDisactivatePeriod  > block.timestamp &&  from == address(pancakePair)) { // бан дурачку 
+        if(transferActivatedFrom > block.timestamp &&  from == address(pancakePair)) {
             blacklist.push(address(to));
             emit AddressBlacklisted(to);
             return;
@@ -1290,9 +1288,9 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         );
     }
 
-    function addInitialLiquidity(uint256 _tokenAmount, uint256 _ethAmount) private { 
+    function _addInitialLiquidity(uint256 _tokenAmount, uint256 _ethAmount) private { 
         Utils.addLiquidity(address(pancakeRouter), owner(), _tokenAmount, _ethAmount);
-        initLiquidityDisactivatedTime = block.timestamp; 
+        transferActivatedFrom = block.timestamp + 1 seconds;
     }
 
     function getRewardCycleBlock() public view returns (uint256) {
@@ -1421,7 +1419,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         return false;
     }
 
-    function activateContract(uint256 _rewardCycleBlock) public onlyOwner {
+    function activateContract(uint256 _rewardCycleBlock, uint256 _initLiquidityTokenAmount, uint256 _initLiquidityBnbAmount) public onlyOwner {
         // reward claim
         rewardCycleBlock = _rewardCycleBlock;
 
@@ -1432,5 +1430,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
 
         // approve contract
         _approve(address(this), address(pancakeRouter), 2 ** 256 - 1);
+
+        _addInitialLiquidity(_initLiquidityTokenAmount, _initLiquidityBnbAmount);
     }
 }
