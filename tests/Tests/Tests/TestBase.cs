@@ -44,7 +44,7 @@ namespace Tests
         {
             var testContractService = await deplService.ContractHelper.DeployTestContract(SwapRouterAddress);
 
-            await testContractService.ActivateContractRequestAndWaitForReceiptAsync();
+            await testContractService.ActivateContractRequestAndWaitForReceiptAsync(7);
 
             output.WriteLine($"Contract deployed to: {testContractService.ContractHandler.ContractAddress}");
 

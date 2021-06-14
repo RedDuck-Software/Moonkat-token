@@ -53,32 +53,6 @@ namespace Contracts.Contracts.Ownable
             return ContractHandler.QueryAsync<GeUnlockTimeFunction, BigInteger>(null, blockParameter);
         }
 
-        public Task<string> LockRequestAsync(LockFunction @lockFunction)
-        {
-             return ContractHandler.SendRequestAsync(@lockFunction);
-        }
-
-        public Task<TransactionReceipt> LockRequestAndWaitForReceiptAsync(LockFunction @lockFunction, CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(@lockFunction, cancellationToken);
-        }
-
-        public Task<string> LockRequestAsync(BigInteger time)
-        {
-            var @lockFunction = new LockFunction();
-                @lockFunction.Time = time;
-            
-             return ContractHandler.SendRequestAsync(@lockFunction);
-        }
-
-        public Task<TransactionReceipt> LockRequestAndWaitForReceiptAsync(BigInteger time, CancellationTokenSource cancellationToken = null)
-        {
-            var @lockFunction = new LockFunction();
-                @lockFunction.Time = time;
-            
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(@lockFunction, cancellationToken);
-        }
-
         public Task<string> OwnerQueryAsync(OwnerFunction ownerFunction, BlockParameter blockParameter = null)
         {
             return ContractHandler.QueryAsync<OwnerFunction, string>(ownerFunction, blockParameter);
@@ -134,26 +108,6 @@ namespace Contracts.Contracts.Ownable
                 transferOwnershipFunction.NewOwner = newOwner;
             
              return ContractHandler.SendRequestAndWaitForReceiptAsync(transferOwnershipFunction, cancellationToken);
-        }
-
-        public Task<string> UnlockRequestAsync(UnlockFunction unlockFunction)
-        {
-             return ContractHandler.SendRequestAsync(unlockFunction);
-        }
-
-        public Task<string> UnlockRequestAsync()
-        {
-             return ContractHandler.SendRequestAsync<UnlockFunction>();
-        }
-
-        public Task<TransactionReceipt> UnlockRequestAndWaitForReceiptAsync(UnlockFunction unlockFunction, CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(unlockFunction, cancellationToken);
-        }
-
-        public Task<TransactionReceipt> UnlockRequestAndWaitForReceiptAsync(CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync<UnlockFunction>(null, cancellationToken);
         }
     }
 }
