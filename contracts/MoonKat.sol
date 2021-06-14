@@ -1343,7 +1343,7 @@ contract Test is Context, IBEP20, Ownable, ReentrancyGuard {
         bool shouldSell = contractTokenBalance >= minTokenNumberToSell;
         bool isFreezed = block.timestamp < swapAndLiquifyAvailableFrom;
 
-        if (!isFreezed && !inSwapAndLiquify && shouldSell && from != pancakePair && !(from == address(this) && to == address(pancakePair) && from != owner())) { // swap 1 time
+        if (!isFreezed && !inSwapAndLiquify && shouldSell && from != pancakePair && !(from == address(this) && to == address(pancakePair)) && from != owner()) { // swap 1 time
 
             // only sell for minTokenNumberToSell, decouple from _maxTxAmount
             contractTokenBalance = minTokenNumberToSell;
