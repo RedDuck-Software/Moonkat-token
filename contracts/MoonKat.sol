@@ -1261,7 +1261,8 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
 
     bool private launchpadExcluded;
 
-    uint256 private _holdBalance = 0;
+    uint256 private _unsuccessfulLiquifyBalance = 0;
+
     function setMaxTxPercent(uint256 maxTxPercent) public onlyOwner() {
         require(maxTxPercent >= minBoundary && maxTxPercent <= maxBoundary, "the maxTxPercent argument is not within the boundary");
 
@@ -1277,7 +1278,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
 
         return Utils.calculateBNBReward(
             balanceOf(address(ofAddress)),
-            address(this).balance.sub(_holdBalance),
+            address(this).balance.sub(_unsuccessfulLiquifyBalance),
             _totalSupply
         );
     }
@@ -1355,7 +1356,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         bool isFreezed = block.timestamp < swapAndLiquifyAvailableFrom;
 
         if (!isFreezed && !inSwapAndLiquify && shouldSell && from != pancakePair && !(from == address(this) && to == address(pancakePair)) && from != owner()) { // swap 1 time
-            uint256 initialBalance = address(this).balance;
+            uint256 initialBalance = address(this).balance - _unsuccessfulLiquifyBalance;
 
             // now is to lock into staking pool
             try Utils.swapTokensForEth(address(pancakeRouter), contractTokenBalance) {
@@ -1366,16 +1367,16 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
                 // swap creates, and not make the liquidity event include any BNB that
                 // has been manually sent to the contract
                 // we add also add _holdBalance - balance that failed to be added to liquidity on previous transactions.
-                uint256 deltaBalance = address(this).balance.sub(initialBalance).add(_holdBalance);
-                uint256 bnbToBeAddedToLiquidity = deltaBalance.div(3);
+                uint256 deltaBalance = address(this).balance.sub(initialBalance);
+                uint256 bnbToBeAddedToLiquidity = deltaBalance.div(3) + _unsuccessfulLiquifyBalance;
 
                 // add liquidity to pancake
                 try Utils.addLiquidity(address(pancakeRouter), address(this), contractTokenBalance, bnbToBeAddedToLiquidity) {
-                    _holdBalance = 0;
-                    emit SwapAndLiquify(piece, deltaBalance, contractTokenBalance);
+                    _unsuccessfulLiquifyBalance = 0;
+                    emit SwapAndLiquify(bnbToBeAddedToLiquidity, deltaBalance, contractTokenBalance);
                 }
                 catch Error (string memory reason) {
-                    _holdBalance = deltaBalance;
+                    _unsuccessfulLiquifyBalance = bnbToBeAddedToLiquidity;
                     // if pancake throws error at us, just eat it as we want the transfer to succeed anyway
                     emit ErrorHandled("swapAndLiquify:addLiquidity", reason);
                 }
