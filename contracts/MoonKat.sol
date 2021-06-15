@@ -1369,7 +1369,6 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
             uint256 pooledBNB = contractTokenBalance.mul(4).div(6); // 2/3 for pool
             uint256 liquidityTotal = contractTokenBalance.sub(pooledBNB); // 1/3 for liquidity
             uint256 liquidityBNB = liquidityTotal.div(2);
-            uint256 liquidityMKAT = liquidityBNB;
 
             uint256 tokenAmountToBeSwapped = pooledBNB.add(liquidityBNB); // 2/3 + (1/3)/2 = 5/6
 
