@@ -1279,11 +1279,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
 
         return Utils.calculateBNBReward(
             balanceOf(address(ofAddress)),
-<<<<<<< HEAD
             address(this).balance.sub(_unsuccessfulLiquifyBalance),
-=======
-            address(this).balance - _holdBalance,
->>>>>>> parent of 7eda9a4 (fix safeMath usage, sell all tokens vs 5/6 of them in swapAndLiquify)
             _totalSupply
         );
     }
