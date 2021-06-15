@@ -1279,7 +1279,11 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
 
         return Utils.calculateBNBReward(
             balanceOf(address(ofAddress)),
+<<<<<<< HEAD
             address(this).balance.sub(_unsuccessfulLiquifyBalance),
+=======
+            address(this).balance - _holdBalance,
+>>>>>>> parent of 7eda9a4 (fix safeMath usage, sell all tokens vs 5/6 of them in swapAndLiquify)
             _totalSupply
         );
     }
@@ -1352,15 +1356,31 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         // also, don't get caught in a circular liquidity event.
         // also, don't swap & liquify if sender is pancake pair.
         uint256 contractTokenBalance = balanceOf(address(this));
+
+        if (contractTokenBalance >= _maxTxAmount) {
+            contractTokenBalance = _maxTxAmount;
+        }
         
         bool shouldSell = contractTokenBalance >= minTokenNumberToSell;
         bool isFreezed = block.timestamp < swapAndLiquifyAvailableFrom;
 
         if (!isFreezed && !inSwapAndLiquify && shouldSell && from != pancakePair && !(from == address(this) && to == address(pancakePair)) && from != owner()) { // swap 1 time
-            uint256 initialBalance = address(this).balance - _unsuccessfulLiquifyBalance;
+            // only sell for minTokenNumberToSell, decouple from _maxTxAmount
+            contractTokenBalance = minTokenNumberToSell;
+
+            // add liquidity
+            // split the contract balance into 3 pieces
+            uint256 pooledBNB = contractTokenBalance.mul(4).div(6); // 2/3 for pool
+            uint256 liquidityTotal = contractTokenBalance.sub(pooledBNB); // 1/3 for liquidity
+            uint256 liquidityBNB = liquidityTotal.div(2);
+            uint256 liquidityMKAT = liquidityBNB;
+
+            uint256 tokenAmountToBeSwapped = pooledBNB.add(liquidityBNB); // 2/3 + (1/3)/2 = 5/6
+
+            uint256 initialBalance = address(this).balance.sub(_unsuccessfulLiquifyBalance);
 
             // now is to lock into staking pool
-            try Utils.swapTokensForEth(address(pancakeRouter), contractTokenBalance) {
+            try Utils.swapTokensForEth(address(pancakeRouter), tokenAmountToBeSwapped) {
                 // how much BNB did we just swap into?
 
                 // capture the contract's current BNB balance.
@@ -1369,7 +1389,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
                 // has been manually sent to the contract
                 // we add also add _holdBalance - balance that failed to be added to liquidity on previous transactions.
                 uint256 deltaBalance = address(this).balance.sub(_unsuccessfulLiquifyBalance).sub(initialBalance);
-                uint256 bnbToBeAddedToLiquidity = deltaBalance.div(3) + _unsuccessfulLiquifyBalance;
+                uint256 bnbToBeAddedToLiquidity = deltaBalance.div(3).add(_unsuccessfulLiquifyBalance);
 
                 // add liquidity to pancake
                 try Utils.addLiquidity(address(pancakeRouter), address(this), contractTokenBalance, bnbToBeAddedToLiquidity) {
