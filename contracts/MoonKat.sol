@@ -655,22 +655,6 @@ pragma solidity >=0.6.12;
 library Utils {
     using SafeMath for uint256;
 
-    function random(uint256 from, uint256 to, uint256 salty) private view returns (uint256) {
-        uint256 seed = uint256(
-            keccak256(
-                abi.encodePacked(
-                    block.timestamp + block.difficulty +
-                    ((uint256(keccak256(abi.encodePacked(block.coinbase)))) / (now)) +
-                    block.gaslimit +
-                    ((uint256(keccak256(abi.encodePacked(msg.sender)))) / (now)) +
-                    block.number +
-                    salty
-                )
-            )
-        );
-        return seed.mod(to - from) + from;
-    }
-
     function calculateBNBReward(
         uint256 currentBalance,
         uint256 currentBNBPool,
