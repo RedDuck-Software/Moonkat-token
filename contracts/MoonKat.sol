@@ -1382,8 +1382,9 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
                 // this is so that we can capture exactly the amount of BNB that the
                 // swap creates, and not make the liquidity event include any BNB that
                 // has been manually sent to the contract
-                // we add also add _holdBalance - balance that failed to be added to liquidity on previous transactions.
+                // we add also add _unsuccessfulLiquifyBalance - balance that failed to be added to liquidity on previous transactions.
                 uint256 deltaBalance = address(this).balance.sub(_unsuccessfulLiquifyBalance).sub(initialBalance);
+                // we div by three as it's the BNB value to be added to liquidity 
                 uint256 bnbToBeAddedToLiquidity = deltaBalance.div(3).add(_unsuccessfulLiquifyBalance);
 
                 // add liquidity to pancake
