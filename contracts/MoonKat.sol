@@ -1039,9 +1039,11 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         _isExcludedFromFee[account] = false;
     }
 
-    function setTaxFeePercent(uint256 taxFee) external onlyOwner() {
-   
-        
+    function includeInMaxTxLimitation(address account) public onlyOwner {
+        _isExcludedFromMaxTx[account] = false;
+    }
+
+    function setTaxFeePercent(uint256 taxFee) external onlyOwner() {        
         require (taxFee >= minTaxFeePerc && taxFee <= maxTaxFeePerc, "taxFee argument is not within the allowed boundary");       
         _taxFee = taxFee;
     }
