@@ -7,10 +7,10 @@ import "../MoonKat.sol";
 contract PreSaleFactory {
     address[] public instances;
 
-    Test public mkat;
+    MKAT public mkat;
 
     constructor(address payable _mkatAddress) public { 
-        mkat = Test(_mkatAddress);
+        mkat = MKAT(_mkatAddress);
     }
 
     function createInstance(
