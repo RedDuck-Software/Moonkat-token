@@ -926,9 +926,6 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         _isExcludedFromFee[address(0x458b14915e651243Acf89C05859a22d5Cff976A6)] = true;
 
         _isExcludedFromMaxTx[address(0x9891A680014F125Ef276a18B849E513Bb988B80B)] = true;
-        _isExcludedFromMaxTx[address(0xDCf3920539D9521A0aD01EEEA390739E36934dd8)] = true;
-        _isExcludedFromMaxTx[address(0x5d6573e62E3688E40c1fC36e01B155Fb0006F432)] = true;
-        _isExcludedFromMaxTx[address(0x458b14915e651243Acf89C05859a22d5Cff976A6)] = true;                                
 
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
