@@ -1170,7 +1170,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         require(!blacklist[address(from)] , "Address {from} is blacklisted");
         require(!blacklist[address(to)], "Address {to} is blacklisted");
 
-        ensureMaxTxAmount(amount, from);
+        ensureMaxTxAmount(amount, from, to);
 
         // swap and liquify
         swapAndLiquify(from, to);
@@ -1325,13 +1325,13 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function ensureMaxTxAmount(
-        uint256 amount, address sender
-    ) 
+        uint256 amount, address sender, address receiver)
     private 
     view
     {
         require(
-            amount <= _maxTxAmount || _isExcludedFromMaxTx[sender],
+            // maxTX limitation doesn't apply to people excluded from max tx - they can send and receive from pancake without limitation
+            amount <= _maxTxAmount || _isExcludedFromMaxTx[sender] || (_isExcludedFromMaxTx[receiver] && sender == pancakePair),
             "Transfer amount exceeds the maxTxAmount for the user"
         );
         return;
