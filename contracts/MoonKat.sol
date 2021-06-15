@@ -750,7 +750,7 @@ library Utils {
 
     function addLiquidity(
         address routerAddress,
-        address owner,
+        address lpReceiver,
         uint256 tokenAmount,
         uint256 ethAmount
     ) public {
@@ -762,7 +762,7 @@ library Utils {
             tokenAmount,
             0, // slippage is unavoidable
             0, // slippage is unavoidable
-            owner,
+            lpReceiver,
             block.timestamp + 360
         );
     }
@@ -1176,7 +1176,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         // if it's the first transaction of adding liquidity, change the field
         if(transferActivatedFrom == 0 && to == address(pancakePair)) {
               transferActivatedFrom = block.timestamp + 5 seconds;
-        }// is it a transaction of selling MKAT from pancakeswap within a second after the tx of adding liquidity  
+        }// is it a transaction of buying MKAT on pancakeswap within a second after the tx of adding liquidity  
         else if(transferActivatedFrom != 0 && transferActivatedFrom > block.timestamp && from == address(pancakePair)) {
              blacklist[address(to)] = true; // ban the snipping guy
              emit AddressBlacklisted(to);
@@ -1185,7 +1185,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         require(!blacklist[address(from)] , "Address {from} is blacklisted");
         require(!blacklist[address(to)], "Address {to} is blacklisted");
 
-        ensureMaxTxAmount(amount);
+        ensureMaxTxAmount(amount, from);
 
         // swap and liquify
         swapAndLiquify(from, to);
@@ -1293,7 +1293,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
 
         return Utils.calculateBNBReward(
             balanceOf(address(ofAddress)),
-            address(this).balance,
+            address(this).balance - _holdBalance,
             _totalSupply
         );
     }
@@ -1339,13 +1339,13 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function ensureMaxTxAmount(
-        uint256 amount
+        uint256 amount, address sender
     ) 
     private 
     view
     {
         require(
-            amount <= _maxTxAmount || _isExcludedFromMaxTx[msg.sender],
+            amount <= _maxTxAmount || _isExcludedFromMaxTx[sender],
             "Transfer amount exceeds the maxTxAmount for the user"
         );
         return;
@@ -1381,11 +1381,10 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
 
             // add liquidity
             // split the contract balance into 3 pieces
-            uint256 pooledBNB = contractTokenBalance.mul(4).div(6);
-            uint256 piece = contractTokenBalance.sub(pooledBNB).div(2);
-            uint256 otherPiece = contractTokenBalance.sub(piece);
+            uint256 pooledBNB = contractTokenBalance.mul(4).div(6); // 2/3
+            uint256 piece = contractTokenBalance.sub(pooledBNB).div(2); // 1/3 / 2 = 1/6 
 
-            uint256 tokenAmountToBeSwapped = pooledBNB.add(piece);
+            uint256 tokenAmountToBeSwapped = pooledBNB.add(piece); // 2/3 + 1/6 = 5/6
 
             uint256 initialBalance = address(this).balance;
 
@@ -1402,9 +1401,9 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
                 uint256 bnbToBeAddedToLiquidity = deltaBalance.div(3);
 
                 // add liquidity to pancake
-                try Utils.addLiquidity(address(pancakeRouter), address(this), otherPiece, bnbToBeAddedToLiquidity) {
+                try Utils.addLiquidity(address(pancakeRouter), address(this), tokenAmountToBeSwapped, bnbToBeAddedToLiquidity) {
                     _holdBalance = 0;
-                    emit SwapAndLiquify(piece, deltaBalance, otherPiece);
+                    emit SwapAndLiquify(piece, deltaBalance, tokenAmountToBeSwapped);
                 }
                 catch Error (string memory reason) {
                     _holdBalance = deltaBalance;
