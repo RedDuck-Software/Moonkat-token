@@ -843,13 +843,13 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     address[] private _excluded;
 
     uint256 private constant MAX = ~uint256(0);
-    uint256 private _tTotal = 1000000000 * 10 ** 9;
+    uint256 private constant _tTotal = 1000000000 * 10 ** 9;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = "MoonKat";
-    string private _symbol = "MKAT";
-    uint8 private _decimals = 9;
+    string  private constant _name = "MoonKat";
+    string  private constant _symbol = "MKAT";
+    uint8   private constant _decimals = 9;
 
     IPancakeRouter02 public immutable pancakeRouter;
     address public immutable pancakePair;
@@ -933,15 +933,15 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
 
-    function name() public view returns (string memory) {
+    function name() public pure returns (string memory) {
         return _name;
     }
 
-    function symbol() public view returns (string memory) {
+    function symbol() public pure returns (string memory) {
         return _symbol;
     }
 
-    function decimals() public view returns (uint8) {
+    function decimals() public pure returns (uint8) {
         return _decimals;
     }
 
@@ -1244,7 +1244,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
 
     // Innovation for protocol by MoonKat Team
     uint256 public rewardCycleBlock = 7 days;
-    uint256 public threshHoldTopUpRate = 2; // 2 percent
+    uint256 constant public threshHoldTopUpRate = 2; // 2 percent
     uint256 public _maxTxAmount = _tTotal; // should be 0.05% percent per transaction, will be set again at activateContract() function
     uint256 public disruptiveCoverageFee = 2 ether; // antiwhale
     mapping(address => uint256) public nextAvailableClaimDate;
@@ -1256,9 +1256,9 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 public _liquidityFee = 6; // 2% will be added pool, 4% will be converted to BNB
     uint256 private _previousLiquidityFee = _liquidityFee;
     
-    uint256 public rewardThreshold = 1 ether;
+    uint256 public constant rewardThreshold = 1 ether;
 
-    uint256 public minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
+    uint256 public immutable minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
 
     uint256 public swapAndLiquifyAvailableFrom;
 
@@ -1424,7 +1424,6 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         rewardCycleBlock = _rewardCycleBlock;
 
         // protocol
-        disruptiveCoverageFee = 2 ether;
         disruptiveTransferEnabledFrom = block.timestamp;
         setMaxTxPercent(10);
 
