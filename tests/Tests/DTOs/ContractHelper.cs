@@ -3,7 +3,6 @@ using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Contracts.Contracts.Test;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,10 +11,11 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Nethereum.Hex.HexConvertors.Extensions;
-using Contracts.Contracts.Test.ContractDefinition;
 using Nethereum.ABI.FunctionEncoding;
 using Contracts.Contracts.Utils.ContractDefinition;
 using System.Text.RegularExpressions;
+using Contracts.Contracts.MKAT;
+using Contracts.Contracts.MKAT.ContractDefinition;
 
 namespace Tests.DTOs
 {
@@ -30,13 +30,13 @@ namespace Tests.DTOs
 
 
 
-        public async Task<TestService> DeployTestContract(string pancakeRouterAddress)
+        public async Task<MKATService> DeployTestContract(string pancakeRouterAddress)
         {
             var deployedLibrary = await DeployUtilsLibrary();
 
-            var deployment = new TestDeployment(LinkLibraryTo(TestDeployment.BYTECODE, deployedLibrary.ContractAddress)) { RouterAddress = pancakeRouterAddress };
+            var deployment = new MKATDeployment(LinkLibraryTo(MKATDeployment.BYTECODE, deployedLibrary.ContractAddress)) { RouterAddress = pancakeRouterAddress };
 
-            return await TestService.DeployContractAndGetServiceAsync(Web3, deployment);
+            return await MKATService.DeployContractAndGetServiceAsync(Web3, deployment);
         }
 
         public async Task<TransactionReceipt> DeployUtilsLibrary()

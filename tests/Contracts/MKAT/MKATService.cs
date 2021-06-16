@@ -10,33 +10,33 @@ using Nethereum.Contracts.CQS;
 using Nethereum.Contracts.ContractHandlers;
 using Nethereum.Contracts;
 using System.Threading;
-using Contracts.Contracts.Test.ContractDefinition;
+using Contracts.Contracts.MKAT.ContractDefinition;
 
-namespace Contracts.Contracts.Test
+namespace Contracts.Contracts.MKAT
 {
-    public partial class TestService
+    public partial class MKATService
     {
-        public static Task<TransactionReceipt> DeployContractAndWaitForReceiptAsync(Nethereum.Web3.Web3 web3, TestDeployment testDeployment, CancellationTokenSource cancellationTokenSource = null)
+        public static Task<TransactionReceipt> DeployContractAndWaitForReceiptAsync(Nethereum.Web3.Web3 web3, MKATDeployment mKATDeployment, CancellationTokenSource cancellationTokenSource = null)
         {
-            return web3.Eth.GetContractDeploymentHandler<TestDeployment>().SendRequestAndWaitForReceiptAsync(testDeployment, cancellationTokenSource);
+            return web3.Eth.GetContractDeploymentHandler<MKATDeployment>().SendRequestAndWaitForReceiptAsync(mKATDeployment, cancellationTokenSource);
         }
 
-        public static Task<string> DeployContractAsync(Nethereum.Web3.Web3 web3, TestDeployment testDeployment)
+        public static Task<string> DeployContractAsync(Nethereum.Web3.Web3 web3, MKATDeployment mKATDeployment)
         {
-            return web3.Eth.GetContractDeploymentHandler<TestDeployment>().SendRequestAsync(testDeployment);
+            return web3.Eth.GetContractDeploymentHandler<MKATDeployment>().SendRequestAsync(mKATDeployment);
         }
 
-        public static async Task<TestService> DeployContractAndGetServiceAsync(Nethereum.Web3.Web3 web3, TestDeployment testDeployment, CancellationTokenSource cancellationTokenSource = null)
+        public static async Task<MKATService> DeployContractAndGetServiceAsync(Nethereum.Web3.Web3 web3, MKATDeployment mKATDeployment, CancellationTokenSource cancellationTokenSource = null)
         {
-            var receipt = await DeployContractAndWaitForReceiptAsync(web3, testDeployment, cancellationTokenSource);
-            return new TestService(web3, receipt.ContractAddress);
+            var receipt = await DeployContractAndWaitForReceiptAsync(web3, mKATDeployment, cancellationTokenSource);
+            return new MKATService(web3, receipt.ContractAddress);
         }
 
         protected Nethereum.Web3.Web3 Web3{ get; }
 
         public ContractHandler ContractHandler { get; }
 
-        public TestService(Nethereum.Web3.Web3 web3, string contractAddress)
+        public MKATService(Nethereum.Web3.Web3 web3, string contractAddress)
         {
             Web3 = web3;
             ContractHandler = web3.Eth.GetContractHandler(contractAddress);
@@ -156,6 +156,20 @@ namespace Contracts.Contracts.Test
                 balanceOfFunction.Account = account;
             
             return ContractHandler.QueryAsync<BalanceOfFunction, BigInteger>(balanceOfFunction, blockParameter);
+        }
+
+        public Task<bool> BlacklistQueryAsync(BlacklistFunction blacklistFunction, BlockParameter blockParameter = null)
+        {
+            return ContractHandler.QueryAsync<BlacklistFunction, bool>(blacklistFunction, blockParameter);
+        }
+
+        
+        public Task<bool> BlacklistQueryAsync(string returnValue1, BlockParameter blockParameter = null)
+        {
+            var blacklistFunction = new BlacklistFunction();
+                blacklistFunction.ReturnValue1 = returnValue1;
+            
+            return ContractHandler.QueryAsync<BlacklistFunction, bool>(blacklistFunction, blockParameter);
         }
 
         public Task<BigInteger> CalculateBNBRewardQueryAsync(CalculateBNBRewardFunction calculateBNBRewardFunction, BlockParameter blockParameter = null)
@@ -307,6 +321,32 @@ namespace Contracts.Contracts.Test
             return ContractHandler.QueryAsync<DisruptiveTransferEnabledFromFunction, BigInteger>(null, blockParameter);
         }
 
+        public Task<string> ExcludeFromBlackListRequestAsync(ExcludeFromBlackListFunction excludeFromBlackListFunction)
+        {
+             return ContractHandler.SendRequestAsync(excludeFromBlackListFunction);
+        }
+
+        public Task<TransactionReceipt> ExcludeFromBlackListRequestAndWaitForReceiptAsync(ExcludeFromBlackListFunction excludeFromBlackListFunction, CancellationTokenSource cancellationToken = null)
+        {
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(excludeFromBlackListFunction, cancellationToken);
+        }
+
+        public Task<string> ExcludeFromBlackListRequestAsync(string addressToExclude)
+        {
+            var excludeFromBlackListFunction = new ExcludeFromBlackListFunction();
+                excludeFromBlackListFunction.AddressToExclude = addressToExclude;
+            
+             return ContractHandler.SendRequestAsync(excludeFromBlackListFunction);
+        }
+
+        public Task<TransactionReceipt> ExcludeFromBlackListRequestAndWaitForReceiptAsync(string addressToExclude, CancellationTokenSource cancellationToken = null)
+        {
+            var excludeFromBlackListFunction = new ExcludeFromBlackListFunction();
+                excludeFromBlackListFunction.AddressToExclude = addressToExclude;
+            
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(excludeFromBlackListFunction, cancellationToken);
+        }
+
         public Task<string> ExcludeFromFeeRequestAsync(ExcludeFromFeeFunction excludeFromFeeFunction)
         {
              return ContractHandler.SendRequestAsync(excludeFromFeeFunction);
@@ -333,15 +373,30 @@ namespace Contracts.Contracts.Test
              return ContractHandler.SendRequestAndWaitForReceiptAsync(excludeFromFeeFunction, cancellationToken);
         }
 
-        public Task<BigInteger> GeUnlockTimeQueryAsync(GeUnlockTimeFunction geUnlockTimeFunction, BlockParameter blockParameter = null)
+        public Task<string> ExcludeLaunchpadFromFeesAndMaxTxRequestAsync(ExcludeLaunchpadFromFeesAndMaxTxFunction excludeLaunchpadFromFeesAndMaxTxFunction)
         {
-            return ContractHandler.QueryAsync<GeUnlockTimeFunction, BigInteger>(geUnlockTimeFunction, blockParameter);
+             return ContractHandler.SendRequestAsync(excludeLaunchpadFromFeesAndMaxTxFunction);
         }
 
-        
-        public Task<BigInteger> GeUnlockTimeQueryAsync(BlockParameter blockParameter = null)
+        public Task<TransactionReceipt> ExcludeLaunchpadFromFeesAndMaxTxRequestAndWaitForReceiptAsync(ExcludeLaunchpadFromFeesAndMaxTxFunction excludeLaunchpadFromFeesAndMaxTxFunction, CancellationTokenSource cancellationToken = null)
         {
-            return ContractHandler.QueryAsync<GeUnlockTimeFunction, BigInteger>(null, blockParameter);
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(excludeLaunchpadFromFeesAndMaxTxFunction, cancellationToken);
+        }
+
+        public Task<string> ExcludeLaunchpadFromFeesAndMaxTxRequestAsync(string launchpadAddress)
+        {
+            var excludeLaunchpadFromFeesAndMaxTxFunction = new ExcludeLaunchpadFromFeesAndMaxTxFunction();
+                excludeLaunchpadFromFeesAndMaxTxFunction.LaunchpadAddress = launchpadAddress;
+            
+             return ContractHandler.SendRequestAsync(excludeLaunchpadFromFeesAndMaxTxFunction);
+        }
+
+        public Task<TransactionReceipt> ExcludeLaunchpadFromFeesAndMaxTxRequestAndWaitForReceiptAsync(string launchpadAddress, CancellationTokenSource cancellationToken = null)
+        {
+            var excludeLaunchpadFromFeesAndMaxTxFunction = new ExcludeLaunchpadFromFeesAndMaxTxFunction();
+                excludeLaunchpadFromFeesAndMaxTxFunction.LaunchpadAddress = launchpadAddress;
+            
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(excludeLaunchpadFromFeesAndMaxTxFunction, cancellationToken);
         }
 
         public Task<BigInteger> GetRewardCycleBlockQueryAsync(GetRewardCycleBlockFunction getRewardCycleBlockFunction, BlockParameter blockParameter = null)
@@ -379,6 +434,32 @@ namespace Contracts.Contracts.Test
                 includeInFeeFunction.Account = account;
             
              return ContractHandler.SendRequestAndWaitForReceiptAsync(includeInFeeFunction, cancellationToken);
+        }
+
+        public Task<string> IncludeInMaxTxLimitationRequestAsync(IncludeInMaxTxLimitationFunction includeInMaxTxLimitationFunction)
+        {
+             return ContractHandler.SendRequestAsync(includeInMaxTxLimitationFunction);
+        }
+
+        public Task<TransactionReceipt> IncludeInMaxTxLimitationRequestAndWaitForReceiptAsync(IncludeInMaxTxLimitationFunction includeInMaxTxLimitationFunction, CancellationTokenSource cancellationToken = null)
+        {
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(includeInMaxTxLimitationFunction, cancellationToken);
+        }
+
+        public Task<string> IncludeInMaxTxLimitationRequestAsync(string account)
+        {
+            var includeInMaxTxLimitationFunction = new IncludeInMaxTxLimitationFunction();
+                includeInMaxTxLimitationFunction.Account = account;
+            
+             return ContractHandler.SendRequestAsync(includeInMaxTxLimitationFunction);
+        }
+
+        public Task<TransactionReceipt> IncludeInMaxTxLimitationRequestAndWaitForReceiptAsync(string account, CancellationTokenSource cancellationToken = null)
+        {
+            var includeInMaxTxLimitationFunction = new IncludeInMaxTxLimitationFunction();
+                includeInMaxTxLimitationFunction.Account = account;
+            
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(includeInMaxTxLimitationFunction, cancellationToken);
         }
 
         public Task<string> IncreaseAllowanceRequestAsync(IncreaseAllowanceFunction increaseAllowanceFunction)
@@ -762,6 +843,17 @@ namespace Contracts.Contracts.Test
                 transferFunction.Amount = amount;
             
              return ContractHandler.SendRequestAndWaitForReceiptAsync(transferFunction, cancellationToken);
+        }
+
+        public Task<BigInteger> TransferActivatedFromQueryAsync(TransferActivatedFromFunction transferActivatedFromFunction, BlockParameter blockParameter = null)
+        {
+            return ContractHandler.QueryAsync<TransferActivatedFromFunction, BigInteger>(transferActivatedFromFunction, blockParameter);
+        }
+
+        
+        public Task<BigInteger> TransferActivatedFromQueryAsync(BlockParameter blockParameter = null)
+        {
+            return ContractHandler.QueryAsync<TransferActivatedFromFunction, BigInteger>(null, blockParameter);
         }
 
         public Task<string> TransferFromRequestAsync(TransferFromFunction transferFromFunction)

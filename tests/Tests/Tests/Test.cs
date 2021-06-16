@@ -1,6 +1,6 @@
 using Contracts.Contracts.IPancakePair;
 using Contracts.Contracts.IPancakeRouter02;
-using Contracts.Contracts.Test.ContractDefinition;
+using Contracts.Contracts.MKAT.ContractDefinition;
 using Nethereum.Hex.HexTypes;
 using System;
 using System.Threading.Tasks;
@@ -16,7 +16,7 @@ namespace Tests
         [Fact]
         public async Task moonkat_contract_deployment()
         {
-            var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
+            var deplSerivice = new ContractsService(accounts[0], ContractsService.PrivateLocalNetworkUrl);
 
             await ResetNode(deplSerivice.Web3);
 
@@ -26,7 +26,7 @@ namespace Tests
         [Fact]
         public async Task transfer_from_owner_without_fee()
         {
-            var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
+            var deplSerivice = new ContractsService(accounts[0], ContractsService.PrivateLocalNetworkUrl);
 
             await ResetNode(deplSerivice.Web3);
 
@@ -35,7 +35,7 @@ namespace Tests
 
             var addressTo = accounts[1].Address;
 
-            var (_, balanceSender, balanceReceiver) = await GetInfoOfAccountsBalances(testContractService, deplSerivice.Account.Address, addressTo);
+            var (_, _, balanceReceiver) = await GetInfoOfAccountsBalances(testContractService, deplSerivice.Account.Address, addressTo);
 
             var amountToSend = await testContractService.MaxTxAmountQueryAsync() / 10;
 
@@ -55,7 +55,7 @@ namespace Tests
         [Fact]
         public async Task transfer_from_address_to_address_with_6pocentage_fee()
         {
-            var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
+            var deplSerivice = new ContractsService(accounts[0], ContractsService.PrivateLocalNetworkUrl);
 
             await ResetNode(deplSerivice.Web3);
 
@@ -66,8 +66,6 @@ namespace Tests
             var addressFrom = deplSerivice.Account.Address;
             var addressTo = accounts[1].Address;
 
-
-            var (_, balanceSender, balanceReceiver) = await GetInfoOfAccountsBalances(testContractService, addressFrom, addressTo);
 
             var amountToSend = await testContractService.MaxTxAmountQueryAsync() / 10;
 
@@ -82,16 +80,16 @@ namespace Tests
             Assert.False(await testContractService.IsExcludedFromFeeQueryAsync(addressFrom), $"Expected that {addressFrom} is not excluded from fee");
             Assert.False(await testContractService.IsExcludedFromFeeQueryAsync(addressTo), $"Expected that {addressTo} is not excluded from fee");
 
-            (_, balanceSender, _) = await GetInfoOfAccountsBalances(testContractService, addressFrom, addressTo);
+            var (_, balanceSender, _) = await GetInfoOfAccountsBalances(testContractService, addressFrom, addressTo);
 
 
             output.WriteLine($"Base balance of sender is: {balanceSender}");
 
             amountToSend = balanceSender;
 
-            deplSerivice.UpdateWeb3(accounts[1], DeploymentService.PrivateLocalNetworkUrl);
+            deplSerivice.UpdateWeb3(accounts[1], ContractsService.PrivateLocalNetworkUrl);
 
-            testContractService = new Contracts.Contracts.Test.TestService(deplSerivice.Web3, testContractService.ContractHandler.ContractAddress);
+            testContractService = new Contracts.Contracts.MKAT.MKATService(deplSerivice.Web3, testContractService.ContractHandler.ContractAddress);
 
             await testContractService.TransferRequestAndWaitForReceiptAsync(recipient: addressTo, amount: amountToSend);
 
@@ -108,7 +106,7 @@ namespace Tests
         [Fact]
         public async Task transfer_with_6percent_fee_and_check_liquidity()
         {
-            var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
+            var deplSerivice = new ContractsService(accounts[0], ContractsService.PrivateLocalNetworkUrl);
 
             await ResetNode(deplSerivice.Web3);
 
@@ -116,8 +114,6 @@ namespace Tests
             var testContractService = await DeployMoonkatConract(deplSerivice);
 
             var routerService = new IPancakeRouter02Service(deplSerivice.Web3, SwapRouterAddress);
-
-            var wbnbAddress = await routerService.WETHQueryAsync();
 
             var pairAddress = await testContractService.PancakePairQueryAsync();
 
@@ -157,11 +153,11 @@ namespace Tests
             Assert.True(shouldSell, "shouldShell must be true");
 
 
-            deplSerivice.UpdateWeb3(accounts[1], DeploymentService.PrivateLocalNetworkUrl);
+            deplSerivice.UpdateWeb3(accounts[1], ContractsService.PrivateLocalNetworkUrl);
 
-            testContractService = new Contracts.Contracts.Test.TestService(deplSerivice.Web3, testContractService.ContractHandler.ContractAddress);
+            testContractService = new Contracts.Contracts.MKAT.MKATService(deplSerivice.Web3, testContractService.ContractHandler.ContractAddress);
 
-            var tx = await testContractService.TransferRequestAndWaitForReceiptAsync(recipient: accounts[2].Address, amount: amountToSend);
+            await testContractService.TransferRequestAndWaitForReceiptAsync(recipient: accounts[2].Address, amount: amountToSend);
 
             var eventHandler = deplSerivice.Web3.Eth.GetEvent<SwapAndLiquifyEventDTO>(testContractService.ContractHandler.ContractAddress);
 
@@ -181,31 +177,28 @@ namespace Tests
         [Fact]
         public async Task disruptive_transfer()
         {
-            var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
+            var deplSerivice = new ContractsService(accounts[0], ContractsService.PrivateLocalNetworkUrl);
 
             await ResetNode(deplSerivice.Web3);
 
 
             var testContractService = await DeployMoonkatConract(deplSerivice);
 
-            var addressFrom = deplSerivice.Account.Address;
             var addressTo = accounts[1].Address;
-
-            var (_, balanceSender, _) = await GetInfoOfAccountsBalances(testContractService, addressFrom, addressTo);
 
             var amountToSend = await testContractService.MaxTxAmountQueryAsync() / 10;
 
             await testContractService.TransferRequestAndWaitForReceiptAsync(recipient: addressTo, amount: amountToSend);
 
-            deplSerivice.UpdateWeb3(accounts[1], DeploymentService.PrivateLocalNetworkUrl);
+            deplSerivice.UpdateWeb3(accounts[1], ContractsService.PrivateLocalNetworkUrl);
 
             addressTo = accounts[2].Address;
 
-            testContractService = new Contracts.Contracts.Test.TestService(deplSerivice.Web3, testContractService.ContractHandler.ContractAddress);
+            testContractService = new Contracts.Contracts.MKAT.MKATService(deplSerivice.Web3, testContractService.ContractHandler.ContractAddress);
 
 
             await testContractService.DisruptiveTransferRequestAndWaitForReceiptAsync(
-                new Contracts.Contracts.Test.ContractDefinition.DisruptiveTransferFunction
+                new DisruptiveTransferFunction
                 {
                     Amount = amountToSend,
                     Recipient = addressTo,
@@ -218,17 +211,13 @@ namespace Tests
         [Fact]
         public async Task claim_bnb_reward()
         {
-            var deplSerivice = new DeploymentService(accounts[0], DeploymentService.PrivateLocalNetworkUrl);
+            var deplSerivice = new ContractsService(accounts[0], ContractsService.PrivateLocalNetworkUrl);
 
             await ResetNode(deplSerivice.Web3);
 
             var testContractService = await DeployMoonkatConract(deplSerivice);
 
-
-            var addressFrom = deplSerivice.Account.Address;
             var addressTo = accounts[1].Address;
-
-            var (_, balanceSender, _) = await GetInfoOfAccountsBalances(testContractService, addressFrom, addressTo);
 
             var amountToSend = await testContractService.MaxTxAmountQueryAsync() / 10;
 
@@ -244,13 +233,13 @@ namespace Tests
 
             await deplSerivice.Web3.Client.SendRequestAsync("evm_increaseTime", null, DateTimeOffset.Now.AddDays(8).ToUnixTimeSeconds());
 
-            deplSerivice.UpdateWeb3(accounts[1], DeploymentService.PrivateLocalNetworkUrl);
+            deplSerivice.UpdateWeb3(accounts[1], ContractsService.PrivateLocalNetworkUrl);
 
-            testContractService = new Contracts.Contracts.Test.TestService(deplSerivice.Web3, testContractService.ContractHandler.ContractAddress);
+            testContractService = new Contracts.Contracts.MKAT.MKATService(deplSerivice.Web3, testContractService.ContractHandler.ContractAddress);
 
             var initBalance = (await deplSerivice.Web3.Eth.GetBalance.SendRequestAsync(deplSerivice.Account.Address)).Value;
 
-            var txClaim = await testContractService.ClaimBNBRewardRequestAndWaitForReceiptAsync(new ClaimBNBRewardFunction() { GasPrice = 0 });
+            await testContractService.ClaimBNBRewardRequestAndWaitForReceiptAsync(new ClaimBNBRewardFunction() { GasPrice = 0 });
 
 
             var eventHandler = deplSerivice.Web3.Eth.GetEvent<ClaimBNBSuccessfullyEventDTO>(testContractService.ContractHandler.ContractAddress);

@@ -4,7 +4,7 @@ using Tests.DTOs;
 
 namespace Tests
 {
-    public class DeploymentService
+    public class ContractsService
     {
         public static string DefaultDeploymentUrl => PrivateLocalNetworkUrl;
 
@@ -22,14 +22,14 @@ namespace Tests
         public Account Account { get; private set; }
 
 
-        public DeploymentService(Account account, string url)
+        public ContractsService(Account account, string url)
         {
             Account = account;
             Web3 = new Web3(account:account,url: url);
             ContractHelper = new ContractHelper(Web3, account);
         }
 
-        public DeploymentService(string url)
+        public ContractsService(string url)
         {
             Web3 = new Web3(url: url);
             ContractHelper = new ContractHelper(Web3);
