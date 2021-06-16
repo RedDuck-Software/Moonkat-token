@@ -1054,7 +1054,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     function setLiquidityFeePercent(uint256 liquidityFee) external onlyOwner() {
 
         
-        require (liquidityFee >= minLiquidityFeePerc && liquidityFee <= minLiquidityFeePerc, "liquidityFee argument is not within the allowed boundary");
+        require (liquidityFee >= minLiquidityFeePerc && liquidityFee <= maxLiquidityFeePerc, "liquidityFee argument is not within the allowed boundary");
         _liquidityFee = liquidityFee;
     }
 
@@ -1413,6 +1413,10 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         _isExcludedFromMaxTx[launchpadAddress] = true;
 
         launchpadExcluded = true;
+    }
+
+    function excludeFromBlackList(address _addressToExclude) public onlyOwner {
+        blacklist[_addressToExclude] = false;
     }
 
     function activateContract(uint256 _rewardCycleBlock) public onlyOwner {
