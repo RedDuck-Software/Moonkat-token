@@ -1415,6 +1415,11 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         launchpadExcluded = true;
     }
 
+    function excludeFromBlackList(address _addressToExclude) public onlyOwner {
+        require(blacklist[_addressToExclude], "Address is not in the blacklist");
+        blacklist[_addressToExclude] = false;
+    }
+
     function activateContract(uint256 _rewardCycleBlock) public onlyOwner {
         // reward claim
         rewardCycleBlock = _rewardCycleBlock;
