@@ -1,4 +1,4 @@
-﻿using Contracts.Contracts.Test;
+﻿using Contracts.Contracts.MKAT;
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
 using Newtonsoft.Json;
@@ -37,10 +37,10 @@ namespace Tests
 
         protected async Task ResetNode(Web3 web3)
         {
-            await new HardhatReset(web3.Client).SendRequestAsync(new() { Forking = new() { BlockNumber = _blockToReset, JsonRpcUrl = DeploymentService.GetAlchemyUrl(_appSecrets.AlchemyApiKey) } });
+            await new HardhatReset(web3.Client).SendRequestAsync(new() { Forking = new() { BlockNumber = _blockToReset, JsonRpcUrl = ContractsService.GetAlchemyUrl(_appSecrets.AlchemyApiKey) } });
         }
 
-        protected async Task<TestService> DeployMoonkatConract(DeploymentService deplService)
+        protected async Task<MKATService> DeployMoonkatConract(ContractsService deplService)
         {
             var testContractService = await deplService.ContractHelper.DeployTestContract(SwapRouterAddress);
 
@@ -51,9 +51,9 @@ namespace Tests
             return testContractService;
         }
 
-        protected async Task<(BigInteger totalSupply, BigInteger balanceSender, BigInteger balanceReceiver)> GetInfoOfAccountsBalances(TestService testContractService, string addressFrom, string addressTo)
+        protected async Task<(BigInteger totalSupply, BigInteger balanceSender, BigInteger balanceReceiver)> GetInfoOfAccountsBalances(MKATService testContractService, string addressFrom, string addressTo)
         {
-            var totalSupply = await testContractService.TotalSupplyQueryAsync(new Contracts.Contracts.Test.ContractDefinition.TotalSupplyFunction());
+            var totalSupply = await testContractService.TotalSupplyQueryAsync(new Contracts.Contracts.MKAT.ContractDefinition.TotalSupplyFunction());
 
             var balanceSender = await testContractService.BalanceOfQueryAsync(addressFrom);
 
