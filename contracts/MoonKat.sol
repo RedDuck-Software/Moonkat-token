@@ -1306,10 +1306,11 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
 
         // update rewardCycleBlock
         nextAvailableClaimDate[msg.sender] = block.timestamp + rewardCycleBlock;
-        emit ClaimBNBSuccessfully(msg.sender, reward, nextAvailableClaimDate[msg.sender]);
-
+        
         (bool sent,) = address(msg.sender).call{value : reward}("");
         require(sent, 'Error: Cannot withdraw reward');
+
+        emit ClaimBNBSuccessfully(msg.sender, reward, nextAvailableClaimDate[msg.sender]);
     }
 
     function topUpClaimCycleAfterTransfer(address recipient, uint256 amount) private {
