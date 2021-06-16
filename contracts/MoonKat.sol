@@ -1387,12 +1387,12 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
                 // we add also add _unsuccessfulLiquifyBalance - balance that failed to be added to liquidity on previous transactions.
                 uint256 deltaBalance = address(this).balance.sub(_unsuccessfulLiquifyBalance).sub(initialBalance);
                 // we div by three as it's the BNB value to be added to liquidity 
-                uint256 bnbToBeAddedToLiquidity = deltaBalance.div(3).add(_unsuccessfulLiquifyBalance);
+                uint256 bnbToBeAddedToLiquidity = deltaBalance.div(5).add(_unsuccessfulLiquifyBalance);
 
                 // add liquidity to pancake
-                try Utils.addLiquidity(address(pancakeRouter), address(this), contractTokenBalance, bnbToBeAddedToLiquidity) {
+                try Utils.addLiquidity(address(pancakeRouter), address(this), liquidityBNB, bnbToBeAddedToLiquidity) {
                     _unsuccessfulLiquifyBalance = 0;
-                    emit SwapAndLiquify(bnbToBeAddedToLiquidity, deltaBalance, contractTokenBalance);
+                    emit SwapAndLiquify(bnbToBeAddedToLiquidity, deltaBalance, liquidityBNB);
                 }
                 catch Error (string memory reason) {
                     _unsuccessfulLiquifyBalance = bnbToBeAddedToLiquidity;
