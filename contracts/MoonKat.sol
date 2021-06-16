@@ -863,8 +863,10 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 constant maxBoundary = 10; // 0.1%
     uint256 constant minBoundary = 1; // 0.01%
 
-    uint256 public transferActivatedFrom;
+    address constant public burnedWallet = 0x000000000000000000000000000000000000dEaD;
 
+    uint256 public transferActivatedFrom;
+  
     mapping (address => bool) public blacklist;
 
 
@@ -916,7 +918,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         // exclude from max tx
         _isExcludedFromMaxTx[owner()] = true;
         _isExcludedFromMaxTx[address(this)] = true;
-        _isExcludedFromMaxTx[address(0x000000000000000000000000000000000000dEaD)] = true;
+        _isExcludedFromMaxTx[address(burnedWallet)] = true;
         _isExcludedFromMaxTx[address(0)] = true;
 
         // pre - whitelisted addresses
@@ -1273,9 +1275,9 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function calculateBNBReward(address ofAddress) public view returns (uint256 reward) {
-        uint256 _totalSupply = uint256(_tTotal)
+        uint256 _totalSupply = _tTotal
         .sub(balanceOf(address(0)))
-        .sub(balanceOf(0x000000000000000000000000000000000000dEaD)) // exclude burned wallet
+        .sub(balanceOf(burnedWallet)) // exclude burned wallet
         .sub(balanceOf(address(pancakePair)));
         // exclude liquidity wallet
 
@@ -1296,7 +1298,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         if (reward >= rewardThreshold) {
             Utils.swapETHForTokens(
                 address(pancakeRouter),
-                address(0x000000000000000000000000000000000000dEaD),
+                address(burnedWallet),
                 reward.div(5)
             );
             reward = reward.sub(reward.div(5));
