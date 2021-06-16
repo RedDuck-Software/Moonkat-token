@@ -1286,10 +1286,6 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         );
     }
 
-    function getRewardCycleBlock() public view returns (uint256) {
-        return rewardCycleBlock;
-    }
-
     function claimBNBReward() isHuman nonReentrant public {
         require(nextAvailableClaimDate[msg.sender] <= block.timestamp, 'Error: next available not reached');
         require(balanceOf(msg.sender) > 0, 'Error: must own MKAT to claim reward');
@@ -1307,7 +1303,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         }
 
         // update rewardCycleBlock
-        nextAvailableClaimDate[msg.sender] = block.timestamp + getRewardCycleBlock();
+        nextAvailableClaimDate[msg.sender] = block.timestamp + rewardCycleBlock;
         emit ClaimBNBSuccessfully(msg.sender, reward, nextAvailableClaimDate[msg.sender]);
 
         (bool sent,) = address(msg.sender).call{value : reward}("");
@@ -1316,7 +1312,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
 
     function topUpClaimCycleAfterTransfer(address recipient, uint256 amount) private {
         uint256 currentRecipientBalance = balanceOf(recipient);
-        uint256 basedRewardCycleBlock = getRewardCycleBlock();
+        uint256 basedRewardCycleBlock = rewardCycleBlock;
 
         nextAvailableClaimDate[recipient] = nextAvailableClaimDate[recipient] + Utils.calculateTopUpClaim(
             currentRecipientBalance,
