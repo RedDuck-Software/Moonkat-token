@@ -843,13 +843,13 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     address[] private _excluded;
 
     uint256 private constant MAX = ~uint256(0);
-    uint256 private _tTotal = 1000000000 * 10 ** 9;
+    uint256 private constant _tTotal = 1000000000 * 10 ** 9;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = "MoonKat";
-    string private _symbol = "MKAT";
-    uint8 private _decimals = 9;
+    string  private constant _name = "MoonKat";
+    string  private constant _symbol = "MKAT";
+    uint8   private constant _decimals = 9;
 
     IPancakeRouter02 public immutable pancakeRouter;
     address public immutable pancakePair;
@@ -863,8 +863,10 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 constant maxBoundary = 10; // 0.1%
     uint256 constant minBoundary = 1; // 0.01%
 
-    uint256 public transferActivatedFrom;
+    address constant public burnedWallet = 0x000000000000000000000000000000000000dEaD;
 
+    uint256 public transferActivatedFrom;
+  
     mapping (address => bool) public blacklist;
 
 
@@ -916,7 +918,7 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         // exclude from max tx
         _isExcludedFromMaxTx[owner()] = true;
         _isExcludedFromMaxTx[address(this)] = true;
-        _isExcludedFromMaxTx[address(0x000000000000000000000000000000000000dEaD)] = true;
+        _isExcludedFromMaxTx[address(burnedWallet)] = true;
         _isExcludedFromMaxTx[address(0)] = true;
 
         // pre - whitelisted addresses
@@ -933,15 +935,15 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
 
-    function name() public view returns (string memory) {
+    function name() public pure returns (string memory) {
         return _name;
     }
 
-    function symbol() public view returns (string memory) {
+    function symbol() public pure returns (string memory) {
         return _symbol;
     }
 
-    function decimals() public view returns (uint8) {
+    function decimals() public pure returns (uint8) {
         return _decimals;
     }
 
@@ -1244,9 +1246,9 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
 
     // Innovation for protocol by MoonKat Team
     uint256 public rewardCycleBlock = 7 days;
-    uint256 public threshHoldTopUpRate = 2; // 2 percent
+    uint256 constant public threshHoldTopUpRate = 2; // 2 percent
     uint256 public _maxTxAmount = _tTotal; // should be 0.05% percent per transaction, will be set again at activateContract() function
-    uint256 public disruptiveCoverageFee = 2 ether; // antiwhale
+    uint256 constant public disruptiveCoverageFee = 2 ether; // antiwhale
     mapping(address => uint256) public nextAvailableClaimDate;
     uint256 public disruptiveTransferEnabledFrom = 0;
 
@@ -1256,9 +1258,9 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     uint256 public _liquidityFee = 6; // 2% will be added pool, 4% will be converted to BNB
     uint256 private _previousLiquidityFee = _liquidityFee;
     
-    uint256 public rewardThreshold = 1 ether;
+    uint256 public constant rewardThreshold = 1 ether;
 
-    uint256 public minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
+    uint256 public immutable minTokenNumberToSell = _tTotal.mul(1).div(10000).div(10); // 0.001% max tx amount will trigger swap and add liquidity
 
     uint256 public swapAndLiquifyAvailableFrom;
 
@@ -1273,9 +1275,9 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
     }
 
     function calculateBNBReward(address ofAddress) public view returns (uint256 reward) {
-        uint256 _totalSupply = uint256(_tTotal)
+        uint256 _totalSupply = _tTotal
         .sub(balanceOf(address(0)))
-        .sub(balanceOf(0x000000000000000000000000000000000000dEaD)) // exclude burned wallet
+        .sub(balanceOf(burnedWallet)) // exclude burned wallet
         .sub(balanceOf(address(pancakePair)));
         // exclude liquidity wallet
 
@@ -1284,10 +1286,6 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
             address(this).balance.sub(_unsuccessfulLiquifyBalance),
             _totalSupply
         );
-    }
-
-    function getRewardCycleBlock() public view returns (uint256) {
-        return rewardCycleBlock;
     }
 
     function claimBNBReward() isHuman nonReentrant public {
@@ -1300,23 +1298,24 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         if (reward >= rewardThreshold) {
             Utils.swapETHForTokens(
                 address(pancakeRouter),
-                address(0x000000000000000000000000000000000000dEaD),
+                address(burnedWallet),
                 reward.div(5)
             );
             reward = reward.sub(reward.div(5));
         }
 
         // update rewardCycleBlock
-        nextAvailableClaimDate[msg.sender] = block.timestamp + getRewardCycleBlock();
-        emit ClaimBNBSuccessfully(msg.sender, reward, nextAvailableClaimDate[msg.sender]);
-
+        nextAvailableClaimDate[msg.sender] = block.timestamp + rewardCycleBlock;
+        
         (bool sent,) = address(msg.sender).call{value : reward}("");
         require(sent, 'Error: Cannot withdraw reward');
+
+        emit ClaimBNBSuccessfully(msg.sender, reward, nextAvailableClaimDate[msg.sender]);
     }
 
     function topUpClaimCycleAfterTransfer(address recipient, uint256 amount) private {
         uint256 currentRecipientBalance = balanceOf(recipient);
-        uint256 basedRewardCycleBlock = getRewardCycleBlock();
+        uint256 basedRewardCycleBlock = rewardCycleBlock;
 
         nextAvailableClaimDate[recipient] = nextAvailableClaimDate[recipient] + Utils.calculateTopUpClaim(
             currentRecipientBalance,
@@ -1424,7 +1423,6 @@ contract MKAT is Context, IBEP20, Ownable, ReentrancyGuard {
         rewardCycleBlock = _rewardCycleBlock;
 
         // protocol
-        disruptiveCoverageFee = 2 ether;
         disruptiveTransferEnabledFrom = block.timestamp;
         setMaxTxPercent(10);
 
