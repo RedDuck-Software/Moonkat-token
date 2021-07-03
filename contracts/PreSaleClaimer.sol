@@ -41,8 +41,7 @@ contract PreSaleClaimer is Ownable{
 
         require(claimAvailableFrom < block.timestamp, "Claiming is not started yet");
         require(senderInfo.isValue, "Address is not in the claim list");
-        require(senderInfo.paymentsMade
-            .mul(senderInfo.periodPaymentAmount) < senderInfo.totalTokensAmount,
+        require(senderInfo.paymentsMade.mul(senderInfo.periodPaymentAmount) < senderInfo.totalTokensAmount,
             "All tokens is already withdrawed");
 
         uint256 passedPeriodPaymentsCount = _calculatePassedPeriodPaymentsCount();
@@ -55,10 +54,18 @@ contract PreSaleClaimer is Ownable{
         senderInfo.paymentsMade = passedPeriodPaymentsCount;
 
         mkatToken.transfer(msg.sender, tokensToSend);
-        
+
         tokenClaimers[msg.sender] = senderInfo;
     }
 
+    function calculateTokenAmountNeededForClaimers() public onlyOwner view returns (uint256) {
+        uint256 amount;
+
+        for(uint i; i <claimers.lenght;i++ ) 
+            amount += tokenClaimers[claimers[i]].totalTokensAmount;
+
+        return amount;
+    }
 
     function addClaimerAddress(address _claimerAddress, uint256 _tokensAmount) public onlyOwner{ 
         _addTokenClaimer(_claimerAddress, _tokensAmount);
