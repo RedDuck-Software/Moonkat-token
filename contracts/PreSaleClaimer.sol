@@ -118,7 +118,7 @@ contract PreSaleClaimer is Ownable{
         _addTokenClaimer(address(0x7f4661627705074934f26305f66D7A2F833578AA), 450000000000000);
         _addTokenClaimer(address(0x80E8Ff6B4fE97DA01118dE914AD600C1eF87177A), 450000000000000);
         _addTokenClaimer(address(0x8208843552f7BB224C0e121E4806dF5977dAbaa5), 1000000000000000);
-        _addTokenClaimer(address(0x859069549d0279efe4e94fe2508bf4baa996cb5a), 112500000000000);
+        _addTokenClaimer(address(0x859069549D0279efE4e94Fe2508bf4bAa996Cb5A), 112500000000000);
         _addTokenClaimer(address(0x87A0dd0652147FBCBa18b1407153f0aE767baCc3), 450000000000000);
         _addTokenClaimer(address(0x8aa2091f4D3Af46130715aa33Acadd37230cc5B6), 450000000000000);
         _addTokenClaimer(address(0x8cfB5d4e4204162439b3714a5eC7a3112575148F), 2338350000000000);
@@ -140,7 +140,7 @@ contract PreSaleClaimer is Ownable{
         _addTokenClaimer(address(0xdD81016a2226f1dd14BBD765D2B153FacF0C0aB5), 450000000000000);
         _addTokenClaimer(address(0xDf0b112E1194eF2Ae50E38F4f3ea498DFFE1Ded7), 255000000000000);
         _addTokenClaimer(address(0xE1ee78b8360Eb51f3E4c6021ba6FBde3F7dC38D9), 450000000000000);
-        _addTokenClaimer(address(0xe243600ad7fd19d828b8d13f5206242cecee3d24), 250000000000000);
+        _addTokenClaimer(address(0xe243600aD7FD19d828B8d13F5206242cecEE3D24), 250000000000000);
         _addTokenClaimer(address(0xe94B8bD697c123d3AAdDcc69FAADc169Ae7D6A75), 450000000000000);
         _addTokenClaimer(address(0xeeB16F4Adc89646A560b28a93c5414c4d3e0bEac), 450000000000000);
         _addTokenClaimer(address(0xFD0F6cf0A329b3f2d3022D6e9C6c2D48EbDFF011), 1000000000000000);
