@@ -56,7 +56,6 @@ contract PreSaleClaimer is Ownable{
         
         uint256 tokensToSend = passedPeriodPaymentsCount.sub(senderInfo.paymentsMade).mul(senderInfo.periodPaymentAmount);
 
-        tokensToSend = senderInfo.totalTokensAmount - senderInfo.paymentsMade * senderInfo.periodPaymentAmount;
         senderInfo.paymentsMade = passedPeriodPaymentsCount;
 
 
