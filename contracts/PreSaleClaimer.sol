@@ -17,7 +17,7 @@ contract PreSaleClaimer is Ownable{
     
     uint256 public constant unFreezePercentage = 2; // 2%
 
-    uint256 public percentageBasicPoints = 10 ** 9;
+    uint256 public constant maxPayments = 100 / unFreezePercentage; // 50 payments
 
     uint256 public immutable claimAvailableFrom; 
 
@@ -48,12 +48,17 @@ contract PreSaleClaimer is Ownable{
 
         uint256 passedPeriodPaymentsCount = _calculatePassedPeriodPaymentsCount();
 
+        if(passedPeriodPaymentsCount > maxPayments) 
+            passedPeriodPaymentsCount = maxPayments;
+
         require( passedPeriodPaymentsCount > senderInfo.paymentsMade, 
           "No unfreezed tokens available for now");
         
         uint256 tokensToSend = passedPeriodPaymentsCount.sub(senderInfo.paymentsMade).mul(senderInfo.periodPaymentAmount);
 
+        tokensToSend = senderInfo.totalTokensAmount - senderInfo.paymentsMade * senderInfo.periodPaymentAmount;
         senderInfo.paymentsMade = passedPeriodPaymentsCount;
+
 
         mkatToken.transfer(msg.sender, tokensToSend);
 
@@ -72,12 +77,12 @@ contract PreSaleClaimer is Ownable{
     function _addTokenClaimer(address _claimerAddress, uint256 _tokensAmount) private { 
         require(!tokenClaimInfoFor[_claimerAddress].isValue, "Address is already in the calim list");
 
-        tokenClaimInfoFor[_claimerAddress] = ClaimerInfo(_tokensAmount, _calculatePeriodPaymentAmount(_tokensAmount, percentageBasicPoints), 0, true);
+        tokenClaimInfoFor[_claimerAddress] = ClaimerInfo(_tokensAmount, _calculatePeriodPaymentAmount(_tokensAmount), 0, true);
         claimersList.push(_claimerAddress);
     }
 
-    function _calculatePeriodPaymentAmount(uint256 _totalAmount, uint256 _basicPoints) private pure returns (uint256){ 
-        return _totalAmount.mul(unFreezePercentage.mul(_basicPoints)).div(uint256(100).mul(_basicPoints));
+    function _calculatePeriodPaymentAmount(uint256 _totalAmount) private pure returns (uint256){ 
+        return _totalAmount.mul(unFreezePercentage).div(uint256(100));
     }
 
     function _calculatePassedPeriodPaymentsCount() private view returns (uint256){ 
