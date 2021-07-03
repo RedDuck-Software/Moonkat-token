@@ -67,11 +67,6 @@ contract PreSaleClaimer is Ownable{
         return amount;
     }
 
-    function addClaimerAddress(address _claimerAddress, uint256 _tokensAmount) public onlyOwner{ 
-        _addTokenClaimer(_claimerAddress, _tokensAmount);
-    }
-
-
     function _addTokenClaimer(address _claimerAddress, uint256 _tokensAmount) private { 
         require(!tokenClaimers[_claimerAddress].isValue, "Address is already in the calim list");
 
