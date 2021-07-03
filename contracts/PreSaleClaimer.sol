@@ -23,9 +23,9 @@ contract PreSaleClaimer is Ownable{
 
     IBEP20 public immutable mkatToken;
 
-    mapping (address => ClaimerInfo) public tokenClaimers;
+    mapping (address => ClaimerInfo) public tokenClaimInfoFor;
 
-    address[] private claimers;
+    address[] private claimersList;
 
     constructor(uint256 _claimAvailableFrom, address _mkatAddress) public { 
         require(_claimAvailableFrom != 0, "Invalid value: claimAvalableFrom must be > 0");
@@ -37,7 +37,7 @@ contract PreSaleClaimer is Ownable{
     
 
     function claimTokens() public { 
-        ClaimerInfo storage senderInfo = tokenClaimers[msg.sender];
+        ClaimerInfo storage senderInfo = tokenClaimInfoFor[msg.sender];
 
         require(claimAvailableFrom < block.timestamp, "Claiming is not started yet");
         require(senderInfo.isValue, "Address is not in the claim list");
@@ -55,32 +55,27 @@ contract PreSaleClaimer is Ownable{
 
         mkatToken.transfer(msg.sender, tokensToSend);
 
-        tokenClaimers[msg.sender] = senderInfo;
+        tokenClaimInfoFor[msg.sender] = senderInfo;
     }
 
     function calculateTokenAmountNeededForClaimers() public onlyOwner view returns (uint256) {
         uint256 amount;
 
-        for(uint i; i <claimers.lenght;i++ ) 
-            amount += tokenClaimers[claimers[i]].totalTokensAmount;
+        for(uint i; i <claimersList.length;i++ ) 
+            amount += tokenClaimInfoFor[claimersList[i]].totalTokensAmount;
 
         return amount;
     }
 
     function _addTokenClaimer(address _claimerAddress, uint256 _tokensAmount) private { 
-        require(!tokenClaimers[_claimerAddress].isValue, "Address is already in the calim list");
+        require(!tokenClaimInfoFor[_claimerAddress].isValue, "Address is already in the calim list");
 
-        tokenClaimers[_claimerAddress] = ClaimerInfo(_tokensAmount, _calculatePeriodPaymentAmount(_tokensAmount, percentageBasicPoints), 0, true);
-        claimers.push(_claimerAddress);
+        tokenClaimInfoFor[_claimerAddress] = ClaimerInfo(_tokensAmount, _calculatePeriodPaymentAmount(_tokensAmount, percentageBasicPoints), 0, true);
+        claimersList.push(_claimerAddress);
     }
-
 
     function _calculatePeriodPaymentAmount(uint256 _totalAmount, uint256 _basicPoints) private pure returns (uint256){ 
         return _totalAmount.mul(unFreezePercentage.mul(_basicPoints)).div(uint256(100).mul(_basicPoints));
-    }
-
-    function _calculateUnFreezeAmount(address _claimerAddress) private view { 
-
     }
 
     function _calculatePassedPeriodPaymentsCount() private view returns (uint256){ 
