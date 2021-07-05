@@ -64,6 +64,11 @@ contract PreSaleClaimer is Ownable{
         tokenClaimInfoFor[msg.sender] = senderInfo;
     }
 
+    function calculateRemainsTokens(address _addr) public view returns (uint256){ 
+        require(tokenClaimInfoFor[_addr].isValue, "Error: address is not listed");
+        return  tokenClaimInfoFor[_addr].totalTokensAmount.sub(tokenClaimInfoFor[_addr].paymentsMade.mul(tokenClaimInfoFor[_addr].periodPaymentAmount));
+    }
+
     function calculatePassedPeriodPaymentsCount() public view returns (uint256){ 
         return _calculatePassedPeriodPaymentsCount();
     }
