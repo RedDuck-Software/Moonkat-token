@@ -57,9 +57,12 @@ contract PreSaleClaimer is Ownable{
         uint256 tokensToSend = passedPeriodPaymentsCount.sub(senderInfo.paymentsMade).mul(senderInfo.periodPaymentAmount);
 
         senderInfo.paymentsMade = passedPeriodPaymentsCount;
-
         mkatToken.transfer(msg.sender, tokensToSend);
         tokenClaimInfoFor[msg.sender] = senderInfo;
+    }
+    
+    function calculatePassedPeriodPaymentsCount() public view returns (uint256){ 
+        return _calculatePassedPeriodPaymentsCount();
     }
 
     function calculateTokenAmountNeededForClaimers() public view returns (uint256) {
