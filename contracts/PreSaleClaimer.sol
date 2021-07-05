@@ -27,6 +27,8 @@ contract PreSaleClaimer is Ownable{
 
     address[] private claimersList;
 
+    uint256 private immutable _paymentsMade;
+
     constructor(uint256 _claimAvailableFrom, address _mkatAddress, uint256 paymentsMade) public { 
         require(_claimAvailableFrom > 0, "Invalid value: claimAvalableFrom must be > 0");
         require(_mkatAddress != address(0), "Invalid value: mkatAddress");
@@ -34,7 +36,7 @@ contract PreSaleClaimer is Ownable{
 
         mkatToken = IBEP20(_mkatAddress);
         claimAvailableFrom = _claimAvailableFrom;
-
+        _paymentsMade = paymentsMade;
         _hardcodeAddresses(paymentsMade);
     }
     
@@ -96,7 +98,7 @@ contract PreSaleClaimer is Ownable{
     function _calculatePassedPeriodPaymentsCount() private view returns (uint256){ 
         require(block.timestamp >= claimAvailableFrom);
 
-        return block.timestamp.sub(claimAvailableFrom).div(unFreezePeriod);
+        return block.timestamp.sub(claimAvailableFrom).div(unFreezePeriod).add(_paymentsMade);
     }
 
 
