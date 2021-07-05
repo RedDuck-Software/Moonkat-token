@@ -98,7 +98,7 @@ contract PreSaleClaimer is Ownable{
     function _calculatePassedPeriodPaymentsCount() private view returns (uint256){ 
         require(block.timestamp >= claimAvailableFrom);
 
-        return block.timestamp.sub(claimAvailableFrom).div(unFreezePeriod).add(_paymentsMade);
+        return block.timestamp.sub(claimAvailableFrom).div(unFreezePeriod).add(1);
     }
 
 
