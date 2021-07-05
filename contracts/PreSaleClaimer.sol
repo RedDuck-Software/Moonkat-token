@@ -43,24 +43,27 @@ contract PreSaleClaimer is Ownable{
 
         require(block.timestamp >= claimAvailableFrom, "Claiming has not started yet");
         require(senderInfo.isValue, "Address is not in the claim list");
-        require(senderInfo.paymentsMade.mul(senderInfo.periodPaymentAmount) < senderInfo.totalTokensAmount, 
+        require(senderInfo.paymentsMade < maxPayments, 
             "All the tokens have already been withdrawn");
 
         uint256 passedPeriodPaymentsCount = _calculatePassedPeriodPaymentsCount();
 
-        if(passedPeriodPaymentsCount > maxPayments) 
-            passedPeriodPaymentsCount = maxPayments;
-
         require(passedPeriodPaymentsCount > senderInfo.paymentsMade, 
           "No unfreezed tokens available for now");
 
-        uint256 tokensToSend = passedPeriodPaymentsCount.sub(senderInfo.paymentsMade).mul(senderInfo.periodPaymentAmount);
+        if(passedPeriodPaymentsCount > maxPayments) 
+            passedPeriodPaymentsCount = maxPayments;
+
+        uint256 tokensToSend =  passedPeriodPaymentsCount.sub(senderInfo.paymentsMade).mul(senderInfo.periodPaymentAmount);
+
+        if(passedPeriodPaymentsCount == maxPayments) // is it last claim? 
+            tokensToSend += senderInfo.totalTokensAmount.sub(passedPeriodPaymentsCount.mul(senderInfo.periodPaymentAmount)); // then add send all remains tokens (if there are any) 
 
         senderInfo.paymentsMade = passedPeriodPaymentsCount;
         mkatToken.transfer(msg.sender, tokensToSend);
         tokenClaimInfoFor[msg.sender] = senderInfo;
     }
-    
+
     function calculatePassedPeriodPaymentsCount() public view returns (uint256){ 
         return _calculatePassedPeriodPaymentsCount();
     }
