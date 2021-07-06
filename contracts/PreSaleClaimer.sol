@@ -21,7 +21,7 @@ contract PreSaleClaimer is Ownable{
 
     uint256 public immutable claimAvailableFrom; 
 
-    IBEP20 public immutable mkatToken;
+    MKAT public immutable mkatToken;
 
     mapping (address => ClaimerInfo) public tokenClaimInfoFor;
 
@@ -34,7 +34,7 @@ contract PreSaleClaimer is Ownable{
         require(_mkatAddress != address(0), "Invalid value: mkatAddress");
         require(paymentsMade < maxPayments, "Invalid value: paymentsMade");
 
-        mkatToken = IBEP20(_mkatAddress);
+        mkatToken = MKAT(payable(_mkatAddress));
         claimAvailableFrom = _claimAvailableFrom;
         _paymentsMade = paymentsMade;
         _hardcodeAddresses(paymentsMade);
@@ -64,6 +64,10 @@ contract PreSaleClaimer is Ownable{
         senderInfo.paymentsMade = passedPeriodPaymentsCount;
         mkatToken.transfer(msg.sender, tokensToSend);
         tokenClaimInfoFor[msg.sender] = senderInfo;
+    }
+    
+    function returnMkatOwnerShip() public onlyOwner{ 
+        mkatToken.transferOwnership(owner());
     }
 
     function calculateRemainsTokens(address _addr) public view returns (uint256){ 
